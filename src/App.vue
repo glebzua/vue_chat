@@ -1,26 +1,107 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div class="home-page">
+
+    <nav class="navbar navbar-expand navbar-dark bg-dark">
+      <div class="navbar-nav mr-auto" >
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+              <router-link
+                  to="/"
+                  class="nav-link"
+              >
+                Home
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link
+                  to="/myContacts"
+                  class="nav-link"
+              >
+                cont
+              </router-link>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Dropdown
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="#">Action</a></li>
+                <li><a class="dropdown-item" href="#">Another action</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">Something else here</a></li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+            </li>
+          </ul>
+          <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form>
+          <div
+              v-if="!currentUser"
+              class="navbar-nav ml-auto"
+          >
+            <li class="nav-item">
+              <router-link
+                  to="/login"
+                  class="nav-link"
+              >
+                Login
+              </router-link>
+            </li>
+          </div>
+
+          <div
+              v-if="currentUser"
+              class="navbar-nav ml-auto"
+          >
+            <li class="nav-item">
+              <a
+                  class="nav-link"
+                  @click.prevent="logOut"
+              >
+                LogOut
+              </a>
+            </li>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+  </div>
+
+        <div class="container">
+        <router-view />
+      </div>
+
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
-</script>
+  computed: {
+    currentUser() {
+      try{
+        if (this.$store.state.auth.user.role!=null) {
+          // console.log(this.$store.state.auth.user.role," -currentUser role !=null")
+        }
+      }catch (e) {
+        localStorage.setItem('state.auth.user.role', '3');
+      }
+      return this.$store.state.auth.user ;
+    },
+  },
+  methods: {
+    logOut() {
+      this.$store.dispatch('auth/logout');
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
+      // window.location.reload();
+      this.$router.push('/login');
+    }
+  }
+};
+
+</script>
