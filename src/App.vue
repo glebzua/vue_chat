@@ -15,10 +15,10 @@
             </li>
             <li class="nav-item">
               <router-link
-                  to="/myContacts"
+                  to="/chat"
                   class="nav-link"
               >
-                cont
+                Chat
               </router-link>
             </li>
             <li class="nav-item dropdown">

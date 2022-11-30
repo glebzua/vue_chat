@@ -10,11 +10,9 @@ export const messages = {
   state: initialState,
   actions: {
     GetMessages({ commit }, chatId) {
-      // console.log("GetMessages messages",chatId)
-      return MessagesService.GetMessages(chatId).then(
+        return MessagesService.GetMessages(chatId).then(
           messages => {
           commit('GetMessagesSuccess', messages);
-          // console.log('GetMessagesSuccess', messages)
           return Promise.resolve(messages);
         },
         error => {
@@ -23,6 +21,19 @@ export const messages = {
         }
       );
     },
+    SendMessage({ commit }, sendMessage) {
+        return MessagesService.SendMessage(sendMessage).then(
+          messages => {
+            commit('SendMessageSuccess', messages);
+              return Promise.resolve(messages);
+          },
+          error => {
+            commit('SendMessageFailure');
+            return Promise.reject(error);
+          }
+      );
+    },
+
 
   },
   mutations: {
@@ -33,6 +44,14 @@ export const messages = {
     GetMessagesFailure(state) {
       state.status.getMessages = false;
       state.messages = null;
+    },
+    SendMessageSuccess(state, message) {
+      state.status.sendMessage = true;
+      state.message = message;
+    },
+    SendMessageFailure(state) {
+      state.status.sendMessage = false;
+      state.message = null;
     },
   }
 };

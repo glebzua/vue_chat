@@ -2,8 +2,8 @@ import { createWebHistory, createRouter } from "vue-router";
 import Home from "./components/Home.vue";
 
 import Login from "./components/Login.vue";
-import Contacts from "./components/contacts.vue";
 import Chat from "./components/chat.vue";
+
 
 const routes = [
 
@@ -13,16 +13,11 @@ const routes = [
     component: Home,
   },
   {
-    path: "/myContacts",
-    name: "Contacts-page",
-    component: Contacts,
-  },
-
-  {
-
-    name: "chat-page",
+    path: "/chat",
+    name: "Chat-page",
     component: Chat,
   },
+
 
   {
     path: "/login",

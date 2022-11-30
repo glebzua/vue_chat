@@ -6,21 +6,35 @@ import authHeader from './auth-header';
 class MessagesService {
 
     GetMessages(chatId) {
-        // console.log("GetMessages event-messages",chatId)
-        return axios
-            //
-            // .get(API_URL + 'messages/my',{ headers: authHeader(),
-                .get(API_URL + 'messages/chat?chatId='+chatId,{ headers: authHeader(),
+            return axios
+            .get(API_URL + 'messages/chat?chatId='+chatId,{ headers: authHeader(),
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',
                 withCredentials: true,
                 credentials: 'same-origin',
                 })
+            .then(response => {
+               return response.data;
+            });
+    }
+    SendMessage(sendMessage) {
+           return axios
+                .post(API_URL + 'messages',{
+                recipientId:sendMessage.messageRecipientId,
+                chatId:sendMessage.clickedChatId,
+                message:sendMessage.text,
+            },{headers: authHeader(),
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+                withCredentials: true,
+                credentials: 'same-origin',})
 
             .then(response => {
-                 // console.log("MessagesService GetMessages response.data - ",response.data)
-
-                return response.data;
+                if (response.status === 201) {
+                    console.log(response.status,"---response.status SendMessage - created");
+                  return response.data;
+                }
+            return response.data;
             });
     }
 
