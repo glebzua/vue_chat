@@ -15,12 +15,14 @@
   <div class="block-messages">  <th>Messages</th>
     <table v-for="(index) of messages"
            :key="index">
+
       <td class="message-date"> {{index.createdDate}}</td>-->
-      <td class="message-owner" v-if="contacts[0].userId===index.senderId" style="color: blue; text-align: left"> {{index.message}}</td>
-      <td class="message-recipient" v-if="contacts[0].userId===index.recipientId" style="color: cornflowerblue ; text-align: right">{{index.message}}</td>
+      <td class="message-owner" v-if="messageRecipient===index.senderId" style="color: blue; text-align: left"> {{index.message}}</td>
+      <td class="message-recipient" v-if="messageRecipient===index.recipientId" style="color: cornflowerblue ; text-align: right">{{index.message}}</td>
       <td class="message-receive-status">{{index.received}}</td>
       <td class="message-send-status">{{index.sended}}</td>
     </table>
+
   </div>
   <div class="block-message">
     <span>Message to {{messageRecipient}}:</span>
@@ -61,6 +63,7 @@ export default {
         text:null},
     }
   },
+
   mounted(){
     AuthService.tokenExpireCheck()
     this.getContacts()
@@ -87,6 +90,7 @@ export default {
       this.$store.dispatch("messages/GetMessages", chatId).then(
           () =>
           this.messages=messages.state.messages,
+          console.log("this.messages time=",this.messages[0]),
           this.clickedChat=chatId,
           this.messageRecipient=messageRecipientId,
            (error) => {
