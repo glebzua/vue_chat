@@ -72,8 +72,9 @@ export default {
     getContacts(event) {
       this.$store.dispatch("contacts/GetContacts", event).then(
           () =>
-          this.contacts=contacts.state.contacts,
+              this.contacts=contacts.state.contacts,
           (error) => {
+
             this.loading = false;
             this.message =
                 (error.response &&
@@ -88,12 +89,17 @@ export default {
     mouseOverContactId(chatId,messageRecipientId)
     {
       this.$store.dispatch("messages/GetMessages", chatId).then(
-          () =>
-          this.messages=messages.state.messages,
-          console.log("this.messages time=",this.messages[0]),
-          this.clickedChat=chatId,
-          this.messageRecipient=messageRecipientId,
-           (error) => {
+          () => {
+            try {
+              this.messages = messages.state.messages
+                  this.clickedChat = chatId,
+                  this.messageRecipient = messageRecipientId
+            }catch (e) {
+              console.log("you have no masseges with this  user")
+              return false;
+            }
+          },
+          (error) => {
             this.message =
                 (error.response &&
                     error.response.data &&
@@ -110,15 +116,15 @@ export default {
       this.sendMessage.text=textMessage
       this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
           () =>
-          this.$store.dispatch("messages/GetMessages",  this.sendMessage.clickedChatId),
+              this.$store.dispatch("messages/GetMessages",  this.sendMessage.clickedChatId),
           this.mouseOverContactId(this.sendMessage.clickedChatId,this.sendMessage.messageRecipientId),
           (error) => {
             this.message =
                 (error.response &&
                     error.response.data &&
                     error.response.data.message) ||
-                    error.message ||
-                    error.toString();
+                error.message ||
+                error.toString();
           }
       );
 
