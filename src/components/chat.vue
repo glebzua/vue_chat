@@ -19,8 +19,24 @@
       <td class="message-date"> {{index.createdDate}}</td>-->
       <td class="message-owner" v-if="messageRecipient===index.senderId" style="color: blue; text-align: left"> {{index.message}}</td>
       <td class="message-recipient" v-if="messageRecipient===index.recipientId" style="color: cornflowerblue ; text-align: right">{{index.message}}</td>
-      <td class="message-receive-status">{{index.received}}</td>
-      <td class="message-send-status">{{index.sended}}</td>
+      <td class="message-receive-status" v-if="index.received===false && messageRecipient===index.recipientId" > <img
+          src="../assets/not_receive-icon.png"
+          width="25"
+      ></td>
+      <td v-else-if="index.received===true && messageRecipient===index.recipientId" > <img
+          src="../assets/receive-icon.png"
+          width="25"
+      ></td>
+      <td class="message-send-status" v-if="index.sended===false && messageRecipient===index.recipientId" > <img
+          src="../assets/mail-send-icon.png"
+          width="25"
+      ></td>
+      <td class="message-send-status" v-else-if="index.sended===true && messageRecipient===index.recipientId" > <img
+          src="../assets/mail-sended-icon.png"
+          width="25"
+      ></td>
+
+
     </table>
 
   </div>

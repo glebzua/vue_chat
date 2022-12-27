@@ -1,49 +1,49 @@
 <template>
   <div
-      v-if="!currentUser"
+      v-if="loggedIn"
       class="navbar-nav ml-auto"
   >
-<span>please login</span>
-</div>
-  <div
-      v-if="currentUser"
-      class="navbar-nav ml-auto"
-  >
-    <span> login-ok</span>
+    <span>loggedIn </span>
   </div>
-<!--  <contacts  />-->
+  <div
+      v-if="!loggedIn"
+      class="navbar-nav ml-auto"
+  >
+    <span>  please login </span>
+  </div>
+
 </template>
 
 <script>
-// import contacts from "./contacts";
+
+
 export default {
   name: 'Home-page',
   props: {
     msg: String
+
   },
   computed: {
-    currentUser() {
+    loggedIn() {
       try {
-        if (this.$store.state.auth.user.role != null) {
-          // console.log(this.$store.state.auth.user.role," -currentUser role !=null")
+        if (localStorage.loggedIn === 'true') {
+          return true
         }
       } catch (e) {
-        localStorage.setItem('state.auth.user.role', '3');
+        localStorage.setItem('$store.loggedIn', 'false');
       }
-      return this.$store.state.auth.user;
+      return false;
     },
   },
-  components: {
-    // contacts,
-  },
-  methods: {
-    logOut() {
-      this.$store.dispatch('auth/logout');
-      this.$router.push('/login');
+    methods: {
+      logOut() {
+        this.$store.dispatch('auth/logout');
+        this.$router.push('/login');
 
 
+      }
     }
-  }
+
 }
 </script>
 

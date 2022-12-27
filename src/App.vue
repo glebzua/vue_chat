@@ -41,7 +41,7 @@
             <button class="btn btn-outline-success" type="submit">Search</button>
           </form>
           <div
-              v-if="!currentUser"
+              v-if="!loggedIn"
               class="navbar-nav ml-auto"
           >
             <li class="nav-item">
@@ -55,7 +55,7 @@
           </div>
 
           <div
-              v-if="currentUser"
+              v-if="loggedIn"
               class="navbar-nav ml-auto"
           >
             <li class="nav-item">
@@ -83,15 +83,15 @@
 
 export default {
   computed: {
-    currentUser() {
-      try{
-        if (this.$store.state.auth.user.role!=null) {
-          // console.log(this.$store.state.auth.user.role," -currentUser role !=null")
-        }
-      }catch (e) {
-        localStorage.setItem('state.auth.user.role', '3');
+    loggedIn() {
+      try {
+      if(this.$store.state.auth.user!=null){
+      return this.$store.state.auth.user
       }
-      return this.$store.state.auth.user ;
+} catch (e) {
+        localStorage.setItem('$store.logddgedIn', false);
+      }
+      return this.$store.state.auth.user
     },
   },
   methods: {

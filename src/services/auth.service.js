@@ -13,7 +13,7 @@ class AuthService {
         password: user.password
       })
       .then(response => {
-        localStorage.setItem('state.auth.user.role', response.data.role);
+        // localStorage.setItem('state.auth.user.role', response.data.role);
         localStorage.setItem('user', response.data.token);
         localStorage.setItem('loggedIn', 'true');
 
@@ -77,7 +77,7 @@ function logouts() {
 
     localStorage.removeItem('user');
     localStorage.removeItem('role');
-    localStorage.removeItem('state.auth.user.role');
+    // localStorage.removeItem('state.auth.user.role');
     localStorage.setItem('loggedIn', 'false');
     localStorage.removeItem('TokenExpireDate');
     window.location.replace('/login')
