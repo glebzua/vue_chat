@@ -11,10 +11,38 @@
   >
     <span>  please login </span>
   </div>
+  <div class="block-users">
+    <th>Users</th>
+    <tr
+        v-for="(index) of users"
+        id="app"
+        :key="index"
+    >
+      <td >{{index.name}}
+        <img
+            @click="clickUser(index.id)"
+            @mouseenter="mouseOverId(index.id)"
+            @mouseleave="mouseleaveId"
+            src="../assets/request-send.png"
+            width="25"
+      >
+      </td>
+        <td v-if="hover===index.id">{{ requestState }}</td>
+
+      <!--            @mouseleave="hover = false"-->
+    </tr>
+  </div>
+  <div>
+    <span>clickedUser id {{ clickedUser }} </span>
+  </div>
 
 </template>
 
 <script>
+
+
+import AuthService from "@/services/auth.service";
+import {users} from "@/store/users.module";
 
 
 export default {
@@ -23,7 +51,20 @@ export default {
     msg: String
 
   },
-  computed: {
+  data() {
+  return {
+    users:[],
+    errors:[],
+    clickedUser:null,
+    hover: false,
+    requestState:'send chat request'
+  }
+},
+  mounted(){
+    AuthService.tokenExpireCheck()
+    this.getUsers()
+  },
+computed: {
     loggedIn() {
       try {
         if (localStorage.loggedIn === 'true') {
@@ -41,7 +82,49 @@ export default {
         this.$router.push('/login');
 
 
-      }
+      },
+      mouseOverId(userId){
+        this.hover=userId
+      },
+      mouseleaveId(){
+        this.requestState='send chat request'
+      },
+      getUsers(event) {
+        // console.log(" getUsers(event)")
+        this.$store.dispatch("users/GetUsers", event).then(
+            () =>
+                this.users=users.state.users,
+            (error) => {
+              this.loading = false;
+              this.message =
+                  (error.response &&
+                      error.response.data &&
+                      error.response.data.message) ||
+                  error.message ||
+                  error.toString();
+            }
+        );
+      },
+
+      clickUser(userId)
+      {
+
+        this.clickedUser = userId
+        console.log("this.clickedUser=",this.clickedUser)
+        this.$store.dispatch("messages/SendRequest", this.clickedUser).then(
+            () =>
+                this.requestState ='sended',
+            (error) => {
+              this.message =
+                  (error.response &&
+                      error.response.data &&
+                      error.response.data.message) ||
+                  error.message ||
+                  error.toString();
+            }
+        );
+      },
+
     }
 
 }

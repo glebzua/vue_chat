@@ -37,7 +37,31 @@ class MessagesService {
             return response.data;
             });
     }
+    SendRequest(clickedUser) {
+        return axios
+            .post(API_URL + 'contacts',{
+                contactid:clickedUser,
+                },{headers: authHeader(),
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+                withCredentials: true,
+                credentials: 'same-origin',})
 
+            .then(r => {
+
+                console.log(r.response.data,"---response ");
+                if (r.response.status === 201) {
+                    console.log(r.response.status,"---response.status sendRequest - sended");
+                    return r.response.data;
+                }
+                if (r.response.status === 400) {
+                    console.log(r.response.data,"---response ");
+                    return r.response.data;
+                }
+                return r.response.data;
+            });
+
+    }
 
 }
 

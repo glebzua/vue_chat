@@ -33,7 +33,18 @@ export const messages = {
           }
       );
     },
-
+    SendRequest({ commit }, sendRequest) {
+      return MessagesService.SendRequest(sendRequest).then(
+          messages => {
+            commit('SendRequestSuccess', messages);
+            return Promise.resolve(messages);
+          },
+          error => {
+            commit('SendRequestFailure');
+            return Promise.reject(error);
+          }
+      );
+    },
 
   },
   mutations: {
@@ -51,6 +62,14 @@ export const messages = {
     },
     SendMessageFailure(state) {
       state.status.sendMessage = false;
+      state.message = null;
+    },
+    SendRequestSuccess(state, message) {
+      state.status.sendRequest = true;
+      state.message = message;
+    },
+    SendRequestFailure(state) {
+      state.status.sendRequest = false;
       state.message = null;
     },
   }
