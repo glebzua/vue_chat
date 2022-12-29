@@ -32,10 +32,6 @@
       <!--            @mouseleave="hover = false"-->
     </tr>
   </div>
-  <div>
-    <span>clickedUser id {{ clickedUser }} </span>
-  </div>
-
 </template>
 
 <script>
@@ -58,6 +54,7 @@ export default {
     clickedUser:null,
     hover: false,
     requestState:'send chat request'
+
   }
 },
   mounted(){
@@ -106,28 +103,31 @@ computed: {
         );
       },
 
-      clickUser(userId)
-      {
+      async clickUser(userId) {
+        try {
 
-        this.clickedUser = userId
-        console.log("this.clickedUser=",this.clickedUser)
-        this.$store.dispatch("messages/SendRequest", this.clickedUser).then(
-            () =>
-                this.requestState ='sended',
-            (error) => {
-              this.message =
-                  (error.response &&
-                      error.response.data &&
-                      error.response.data.message) ||
-                  error.message ||
-                  error.toString();
-            }
-        );
-      },
+          this.clickedUser = userId
+          await this.$store.dispatch("messages/SendRequest", this.clickedUser)
+           .then(response=>{
+                  this.requestState = response,
+                 (error) => {
+                this.message =
+                    (error.response &&
+                        error.response.data &&
+                        error.response.data.message) ||
+                    error.message ||
+                    error.toString();
+              }}
+          );
+        }catch
+        (error)
+        {
+          console.log("catch Error: ", error);
 
-    }
+        }
+      }
 
-}
+}}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

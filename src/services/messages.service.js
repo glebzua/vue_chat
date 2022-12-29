@@ -31,7 +31,6 @@ class MessagesService {
 
             .then(response => {
                 if (response.status === 201) {
-                    console.log(response.status,"---response.status SendMessage - created");
                   return response.data;
                 }
             return response.data;
@@ -49,16 +48,13 @@ class MessagesService {
 
             .then(r => {
 
-                console.log(r.response.data,"---response ");
-                if (r.response.status === 201) {
-                    console.log(r.response.status,"---response.status sendRequest - sended");
+              if (r.response.status === 201) {
                     return r.response.data;
                 }
                 if (r.response.status === 400) {
-                    console.log(r.response.data,"---response ");
-                    return r.response.data;
+                   return r.response.data;
                 }
-                return r.response.data;
+                    return r.response.data;
             });
 
     }

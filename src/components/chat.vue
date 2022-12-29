@@ -8,8 +8,8 @@
     >
       <td @click="mouseOverContactId(index.chatId,index.contactId)" >
         {{index.contactId}}</td>
-      <td v-if="clickedChat===index.chatId">
-      </td>
+
+
     </tr>
   </div>
   <div class="block-messages">  <th>Messages</th>
@@ -42,10 +42,16 @@
   </div>
   <div class="block-message">
     <span>Message to {{messageRecipient}}:</span>
-    <input v-model="textMessage" placeholder="text here" />
+    <input v-model="textMessage" placeholder="text here" @keyup.enter = "SendMessage(clickedChat,messageRecipient,textMessage)"/>
   </div>
   <div class="block-send-button">
+<!--         :disabled="loading"-->
+
     <span @click="SendMessage(clickedChat,messageRecipient,textMessage)" > button here </span>
+<!--    <span-->
+<!--        v-show="loading"-->
+<!--        class="spinner-border spinner-border-sm"-->
+<!--    />-->
   </div>
 
   <tr v-if="errors && errors.lenght">
@@ -67,6 +73,7 @@ export default {
   name: "Chat-page",
   data() {
     return {
+      // loading: false,
       contacts:[],
       errors:[],
       clickedChat:null,
@@ -106,12 +113,12 @@ export default {
     {
       this.$store.dispatch("messages/GetMessages", chatId).then(
           () => {
-            try {
+              try {
               this.messages = messages.state.messages
-                  this.clickedChat = chatId,
+                  this.clickedChat = chatId
                   this.messageRecipient = messageRecipientId
-            }catch (e) {
-              console.log("you have no masseges with this  user")
+               }catch (e) {
+              console.log("you have no massages with this  user")
               return false;
             }
           },
@@ -125,15 +132,18 @@ export default {
           }
       );
     },
+
     SendMessage(clickedChat,messageRecipient,textMessage)
     {
       this.sendMessage.clickedChatId=clickedChat
       this.sendMessage.messageRecipientId=messageRecipient
       this.sendMessage.text=textMessage
       this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
-          () =>
-              this.$store.dispatch("messages/GetMessages",  this.sendMessage.clickedChatId),
-          this.mouseOverContactId(this.sendMessage.clickedChatId,this.sendMessage.messageRecipientId),
+       setTimeout(() => {
+        this.mouseOverContactId(this.sendMessage.clickedChatId,this.sendMessage.messageRecipientId);
+      }, 400),
+
+          this.textMessage=null,
           (error) => {
             this.message =
                 (error.response &&
