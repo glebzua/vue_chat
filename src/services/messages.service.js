@@ -37,9 +37,10 @@ class MessagesService {
             });
     }
     SendRequest(clickedUser) {
-        return axios
-            .post(API_URL + 'contacts',{
-                contactid:clickedUser,
+       return axios
+                .post(API_URL + 'contacts',{
+                contactId:clickedUser.userId,
+                nickname:clickedUser.nickname,
                 },{headers: authHeader(),
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',
@@ -47,14 +48,20 @@ class MessagesService {
                 credentials: 'same-origin',})
 
             .then(r => {
-
-              if (r.response.status === 201) {
-                    return r.response.data;
+               console.log("r.response",r)
+                if (r.status === 201) {
+                    console.log("r.status === 201")
+                    return "request sended";
                 }
+              // if (r.response.status === 201) {
+              //     console.log("r.response.status === 201")
+              //       return r.response.data;
+              //   }
                 if (r.response.status === 400) {
+                    console.log("r.response 400",r.response.data)
                    return r.response.data;
                 }
-                    return r.response.data;
+                    return r.data;
             });
 
     }

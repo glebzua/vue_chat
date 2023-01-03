@@ -6,13 +6,18 @@
         id="app"
         :key="index"
     >
-      <td @click="mouseOverContactId(index.chatId,index.contactId)" >
-        {{index.contactId}}</td>
-
+<!--      <td  v-if="index.chatId!==emptyChat" @click="openChat(index.chatId,index.contactId)" >-->
+<!--        {{index.nickname}}</td>-->
+      <td @click="openChat(index)" >
+        {{index.nickname}}</td>
+<!--      <td  v-if="index.chatId===emptyChat">-->
+<!--        {{index.nickname}}- user  don't accept chat request from {{index.createdDate}}</td>-->
 
     </tr>
   </div>
   <div class="block-messages">  <th>Messages</th>
+    <table > <td>{{messageState}}</td>
+    </table>
     <table v-for="(index) of messages"
            :key="index">
 
@@ -35,23 +40,17 @@
           src="../assets/mail-sended-icon.png"
           width="25"
       ></td>
-
-
     </table>
 
   </div>
   <div class="block-message">
-    <span>Message to {{messageRecipient}}:</span>
+    <span>Message to id{{messageRecipient}} :</span>
     <input v-model="textMessage" placeholder="text here" @keyup.enter = "SendMessage(clickedChat,messageRecipient,textMessage)"/>
   </div>
   <div class="block-send-button">
-<!--         :disabled="loading"-->
 
     <span @click="SendMessage(clickedChat,messageRecipient,textMessage)" > button here </span>
-<!--    <span-->
-<!--        v-show="loading"-->
-<!--        class="spinner-border spinner-border-sm"-->
-<!--    />-->
+
   </div>
 
   <tr v-if="errors && errors.lenght">
@@ -63,13 +62,16 @@
     </td>
   </tr>
 
+
 </template>
 
 <script>
+
 import AuthService from "@/services/auth.service";
 import {contacts} from "@/store/contacts.module";
 import {messages} from "@/store/messages.module";
 export default {
+
   name: "Chat-page",
   data() {
     return {
@@ -84,6 +86,9 @@ export default {
         messageRecipientId:null,
         clickedChatId:null,
         text:null},
+      emptyChat:'                                                            ',
+      messageState:'',
+      tempObj:null,
     }
   },
 
@@ -93,9 +98,11 @@ export default {
   },
   methods:{
     getContacts(event) {
+
       this.$store.dispatch("contacts/GetContacts", event).then(
           () =>
               this.contacts=contacts.state.contacts,
+           // console.log("this.contacts -",this.contacts),
           (error) => {
 
             this.loading = false;
@@ -109,16 +116,27 @@ export default {
       );
     },
 
-    mouseOverContactId(chatId,messageRecipientId)
-    {
-      this.$store.dispatch("messages/GetMessages", chatId).then(
+    openChat(messageObj)
+    {this.messageState=""
+
+      // console.log(messageObj,"||")
+      if(messageObj.chatId===this.emptyChat){
+        this.messageState="user don't accept chat request from "+messageObj.createdDate
+        this.messages=""
+        return
+      }
+     this.$store.dispatch("messages/GetMessages", messageObj.chatId).then(
           () => {
               try {
-              this.messages = messages.state.messages
-                  this.clickedChat = chatId
-                  this.messageRecipient = messageRecipientId
+                    if(messages.state.messages===null){
+                      this.messageState="you have no massages with this user!"
+                    }
+                  this.messages = messages.state.messages
+                  this.clickedChat = messageObj.chatId
+                  this.messageRecipient = messageObj.messageRecipientId
                }catch (e) {
-              console.log("you have no massages with this  user")
+
+              console.log("you have no massages with this  user",this.messageState)
               return false;
             }
           },
@@ -140,7 +158,7 @@ export default {
       this.sendMessage.text=textMessage
       this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
        setTimeout(() => {
-        this.mouseOverContactId(this.sendMessage.clickedChatId,this.sendMessage.messageRecipientId);
+        this.openChat(this.sendMessage.clickedChatId,this.sendMessage.messageRecipientId);
       }, 400),
 
           this.textMessage=null,
