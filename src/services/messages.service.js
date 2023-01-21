@@ -17,6 +17,20 @@ class MessagesService {
                return response.data;
             });
     }
+    HadNewMessages() {
+        return axios
+            .get(API_URL + 'messages/uchats',{ headers: authHeader(),
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+                withCredentials: true,
+                credentials: 'same-origin',
+            })
+            .then(response => {
+                // console.log("r.response HadNewMessages",response.data)
+                return response.data;
+
+            });
+    }
     SendMessage(sendMessage) {
            return axios
                 .post(API_URL + 'messages',{
@@ -53,10 +67,6 @@ class MessagesService {
                     console.log("r.status === 201")
                     return "request sended";
                 }
-              // if (r.response.status === 201) {
-              //     console.log("r.response.status === 201")
-              //       return r.response.data;
-              //   }
                 if (r.response.status === 400) {
                     console.log("r.response 400",r.response.data)
                    return r.response.data;

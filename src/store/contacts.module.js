@@ -13,7 +13,6 @@ export const contacts = {
       return ContactsService.GetContacts(contacts).then(
           contacts => {
           commit('GetContactsSuccess', contacts);
-          // console.log('GetContactsSuccess', contacts)
           return Promise.resolve(contacts);
         },
         error => {

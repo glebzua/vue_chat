@@ -5,6 +5,7 @@ import Login from "./components/Login.vue";
 import Chat from "./components/chat.vue";
 
 
+
 const routes = [
 
   {
@@ -18,17 +19,10 @@ const routes = [
     component: Chat,
   },
 
-
   {
     path: "/login",
     component: Login,
   },
-  // {
-  //   path: "/register",
-  //   component: Register,
-  // },
-
-
 
 ];
 

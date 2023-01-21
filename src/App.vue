@@ -77,6 +77,7 @@
         </div>
 
   <router-view />-->
+
 </template>
 
 <script>
@@ -95,6 +96,7 @@ export default {
     },
   },
   methods: {
+
     logOut() {
       this.$store.dispatch('auth/logout');
 

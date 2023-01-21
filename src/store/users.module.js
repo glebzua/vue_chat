@@ -13,7 +13,6 @@ export const users = {
       return UsersService.GetUsers(users).then(
           users => {
           commit('GetUsersSuccess', users);
-           // console.log('GetUsersSuccess', users)
           return Promise.resolve(users);
         },
         error => {

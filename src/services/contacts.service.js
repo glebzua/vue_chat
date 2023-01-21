@@ -13,8 +13,6 @@ class ContactsService {
                 credentials: 'same-origin',
                 })
             .then(response => {
-                // console.log("ContactsService GetContacts response.data - ",response.data)
-
                 return response.data;
             });
     }

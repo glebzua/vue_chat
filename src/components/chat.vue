@@ -1,110 +1,120 @@
 <template>
+
   <div class="block-contacts">
     <th>Contact</th>
     <tr
-        v-for="(index) of contacts"
+        v-for="(contIndex) of contacts"
         id="app"
-        :key="index"
+        :key="contIndex"
     >
-<!--      <td  v-if="index.chatId!==emptyChat" @click="openChat(index.chatId,index.contactId)" >-->
-<!--        {{index.nickname}}</td>-->
-      <td @click="openChat(index)" >
-        {{index.nickname}}</td>
-<!--      <td  v-if="index.chatId===emptyChat">-->
-<!--        {{index.nickname}}- user  don't accept chat request from {{index.createdDate}}</td>-->
-
+     <td @click="clickedCont(contIndex)" >
+        {{contIndex.nickname}}-
+      </td>
+      <img v-if="(this.pusherMessagesContacts.length>0)&&haveUnreadMessage(contIndex.contactId)"
+           src="../assets/new_message.png"
+           width="25"
+      >
     </tr>
   </div>
   <div class="block-messages">  <th>Messages</th>
+
     <table > <td>{{messageState}}</td>
     </table>
-    <table v-for="(index) of messages"
-           :key="index">
+    <table v-for="(messagesIndex) of messages"
+           :key="messagesIndex">
 
-      <td class="message-date"> {{index.createdDate}}</td>-->
-      <td class="message-owner" v-if="messageRecipient===index.senderId" style="color: blue; text-align: left"> {{index.message}}</td>
-      <td class="message-recipient" v-if="messageRecipient===index.recipientId" style="color: cornflowerblue ; text-align: right">{{index.message}}</td>
-      <td class="message-receive-status" v-if="index.received===false && messageRecipient===index.recipientId" > <img
+      <td class="message-date"> {{messagesIndex.createdDate}}</td>-->
+      <td class="message-owner" v-if="messageRecipient===messagesIndex.recipientId" style="color: blue; text-align: left"> {{messagesIndex.message}}</td>
+      <td class="message-recipient" v-if="messageRecipient===messagesIndex.senderId" style="color: cornflowerblue ; text-align: right">{{messagesIndex.message}}</td>
+      <td class="message-receive-status" v-if="messagesIndex.received===false && messageRecipient===messagesIndex.recipientId" > <img
           src="../assets/not_receive-icon.png"
           width="25"
       ></td>
-      <td v-else-if="index.received===true && messageRecipient===index.recipientId" > <img
+      <td v-else-if="messagesIndex.received===true && messageRecipient===messagesIndex.recipientId" > <img
           src="../assets/receive-icon.png"
           width="25"
       ></td>
-      <td class="message-send-status" v-if="index.sended===false && messageRecipient===index.recipientId" > <img
+      <td class="message-send-status" v-if="messagesIndex.sended===false && messageRecipient===messagesIndex.recipientId" > <img
           src="../assets/mail-send-icon.png"
           width="25"
       ></td>
-      <td class="message-send-status" v-else-if="index.sended===true && messageRecipient===index.recipientId" > <img
-          src="../assets/mail-sended-icon.png"
-          width="25"
-      ></td>
+      <td class="message-send-status" v-else-if="messagesIndex.sended===true && messageRecipient===messagesIndex.recipientId" >
+        <img
+            src="../assets/mail-sended-icon.png"
+            width="25"
+        ></td>
     </table>
-
   </div>
   <div class="block-message">
     <span>Message to id{{messageRecipient}} :</span>
     <input v-model="textMessage" placeholder="text here" @keyup.enter = "SendMessage(clickedChat,messageRecipient,textMessage)"/>
   </div>
   <div class="block-send-button">
-
     <span @click="SendMessage(clickedChat,messageRecipient,textMessage)" > button here </span>
-
   </div>
-
-  <tr v-if="errors && errors.lenght">
-    <td
-        v-for="(index, error) of errors"
-        :key="index"
-    >
-      {{ error.message }}
-    </td>
-  </tr>
 
 
 </template>
 
 <script>
-
 import AuthService from "@/services/auth.service";
+import {getMessages, messages} from "@/store/messages.module";
+import * as $state from "@/store/messages.module";
 import {contacts} from "@/store/contacts.module";
-import {messages} from "@/store/messages.module";
-export default {
 
-  name: "Chat-page",
+export default {
+  name: "Contacts-page",
+
   data() {
     return {
-      // loading: false,
-      contacts:[],
-      errors:[],
       clickedChat:null,
-      messageRecipient:null,
-      messages:[],
       textMessage:null,
+      tmp:null,
+      messageState:null,
+      messages:[],
+      emptyChat:'                                                            ',
+      messageRecipient:null,
+      contacts: [],
+      errors: [],
+      pusherMessagesContacts: [],
       sendMessage:{
         messageRecipientId:null,
         clickedChatId:null,
         text:null},
-      emptyChat:'                                                            ',
-      messageState:'',
-      tempObj:null,
     }
   },
 
-  mounted(){
-    AuthService.tokenExpireCheck()
-    this.getContacts()
-  },
-  methods:{
-    getContacts(event) {
+  mounted() {
 
+    this.messageRecipient=null
+    this.getContacts()
+    AuthService.tokenExpireCheck()
+    try{
+      if ($state.getMessages.state.chatId != null) {
+        this.clickedChat = $state.getMessages.state.chatId
+      }
+
+      this.contacts= this.$store.state.contacts.contacts
+      const channel = this.$pusher.subscribe(localStorage.getItem('userId'));
+      channel.bind('NewMessage', event => {
+        this.pusherMessagesContacts.push(event)
+      })
+      console.log('subscribing to `my-channel`...', {
+        $pusher: this.$pusher,
+      })
+    }catch (e){
+      console.log("mounted contacts:",e)
+    }
+    this.hadNewMessages()
+  },
+
+  methods: {
+    getContacts(event) {
       this.$store.dispatch("contacts/GetContacts", event).then(
           () =>
               this.contacts=contacts.state.contacts,
-           // console.log("this.contacts -",this.contacts),
+          this.$store.state.contacts.contacts=this.contacts  ,
           (error) => {
-
             this.loading = false;
             this.message =
                 (error.response &&
@@ -115,28 +125,34 @@ export default {
           }
       );
     },
-
-    openChat(messageObj)
-    {this.messageState=""
-
-      // console.log(messageObj,"||")
+    clickedCont(messageObj){
+      this.messageState=""
+      this.tmp=null
       if(messageObj.chatId===this.emptyChat){
         this.messageState="user don't accept chat request from "+messageObj.createdDate
         this.messages=""
+        this.messageRecipient=null
         return
       }
-     this.$store.dispatch("messages/GetMessages", messageObj.chatId).then(
+      this.$store.dispatch("getMessages/GetMessages", messageObj.chatId).then(
           () => {
-              try {
-                    if(messages.state.messages===null){
-                      this.messageState="you have no massages with this user!"
-                    }
-                  this.messages = messages.state.messages
-                  this.clickedChat = messageObj.chatId
-                  this.messageRecipient = messageObj.messageRecipientId
-               }catch (e) {
-
-              console.log("you have no massages with this  user",this.messageState)
+            try {
+              if(getMessages.state.getMessages===null){
+                  $state.getMessages.state.recipientId=null
+                this.messageState="you have no massages with this user!"
+              }
+              this.messages = $state.getMessages.state.getMessages
+              $state.getMessages.state.recipientId=messageObj.contactId
+              $state.getMessages.state.chatId=messageObj.chatId
+              this.clickedChat = messageObj.chatId
+              this.messageRecipient = messageObj.contactId
+              console.log(" this.pusherMessagesContacts", this.pusherMessagesContacts)
+              this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf({
+                "NewMessageFrom": messageObj.contactId
+              }), 1);
+              console.log(" this.pusherMessagesContacts after  splice", this.pusherMessagesContacts)
+            }catch (e) {
+              console.log("clickedCont",e)
               return false;
             }
           },
@@ -151,17 +167,36 @@ export default {
       );
     },
 
+    hadNewMessages(){
+      this.$store.dispatch("hadNewMessages/HadNewMessages").then(
+          () => {
+           },
+          (error) => {
+            this.message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message ||
+                error.toString();
+          }
+      );
+    },
     SendMessage(clickedChat,messageRecipient,textMessage)
     {
       this.sendMessage.clickedChatId=clickedChat
       this.sendMessage.messageRecipientId=messageRecipient
       this.sendMessage.text=textMessage
-      this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
-       setTimeout(() => {
-        this.openChat(this.sendMessage.clickedChatId,this.sendMessage.messageRecipientId);
-      }, 400),
+       this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
+
+          this.messages = messages.state.getMessages,
+
+          setTimeout(() => {
+            this.clickedCont({chatId:this.sendMessage.clickedChatId,
+              contactId:this.sendMessage.messageRecipientId});
+          }, 800),
 
           this.textMessage=null,
+
           (error) => {
             this.message =
                 (error.response &&
@@ -173,8 +208,30 @@ export default {
       );
 
     },
-  },
+    checkAvailability(arr, val) {
+
+      return arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal))
+    },
+    haveUnreadMessage(contactId){
+      try{
+        if(contactId!=null){
+            if(contactId===this.messageRecipient){
+            this.clickedCont({chatId:$state.getMessages.state.chatId,
+              contactId:$state.getMessages.state.recipientId})
+            return
+          }
+        }
+
+      }catch (e) {
+        console.log("haveUnreadMessage", e)
+      }
+      return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
+
+    },
+
+  }
 }
+
 </script>
 
 <style scoped>
@@ -188,3 +245,4 @@ export default {
 .message-receive-status{width:5%;}
 .message-send-status{width:5%;}
 </style>
+

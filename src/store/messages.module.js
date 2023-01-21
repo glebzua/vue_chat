@@ -9,18 +9,6 @@ export const messages = {
   namespaced: true,
   state: initialState,
   actions: {
-    GetMessages({ commit }, chatId) {
-        return MessagesService.GetMessages(chatId).then(
-          messages => {
-          commit('GetMessagesSuccess', messages);
-          return Promise.resolve(messages);
-        },
-        error => {
-          commit('GetMessagesFailure');
-          return Promise.reject(error);
-        }
-      );
-    },
     SendMessage({ commit }, sendMessage) {
         return MessagesService.SendMessage(sendMessage).then(
           messages => {
@@ -48,14 +36,6 @@ export const messages = {
 
   },
   mutations: {
-    GetMessagesSuccess(state, messages) {
-      state.status.getMessages = true;
-      state.messages = messages;
-    },
-    GetMessagesFailure(state) {
-      state.status.getMessages = false;
-      state.messages = null;
-    },
     SendMessageSuccess(state, message) {
       state.status.sendMessage = true;
       state.message = message;
@@ -74,3 +54,67 @@ export const messages = {
     },
   }
 };
+export const hadNewMessages = {
+  namespaced: true,
+  state: initialState,
+  actions: {
+    HadNewMessages({commit}) {
+      return MessagesService.HadNewMessages().then(
+          hadNewMessages => {
+            commit('HadNewMessagesSuccess', hadNewMessages);
+
+            return Promise.resolve(hadNewMessages);
+          },
+          error => {
+            commit('HadNewMessagesFailure');
+            return Promise.reject(error);
+          }
+      );
+    },
+
+  },
+  mutations: {
+    HadNewMessagesSuccess(state, hadNewMessages) {
+      state.status.hadNewMessages = true;
+      state.hadNewMessages = hadNewMessages;
+    },
+    HadNewMessagesFailure(state) {
+      state.status.hadNewMessages = false;
+      state.hadNewMessages = null;
+    },
+  }
+}
+
+export const getMessages = {
+
+  namespaced: true,
+  state: initialState,
+  actions: {
+    GetMessages({commit} , chatId) {
+      return MessagesService.GetMessages(chatId).then(
+          getMessages => {
+            if(length.getMessages>0){
+            commit('GetMessagesSuccess', Object.keys(getMessages).map((key) => getMessages[key]))
+            return Promise.resolve(getMessages);
+            }
+            commit('GetMessagesSuccess', getMessages);
+            return Promise.resolve(getMessages);
+
+          },
+          error => {
+            commit('GetMessagesFailure');
+            return Promise.reject(error);
+          }
+      );
+    },
+},
+  mutations: {
+    GetMessagesSuccess(state, getMessages) {
+      state.status.getMessages = true;
+      state.getMessages = getMessages;
+    },
+    GetMessagesFailure(state) {
+      state.status.getMessages = false;
+      state.getMessages = null;
+    },
+  }}
