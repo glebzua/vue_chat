@@ -12,9 +12,9 @@ class UsersService {
                 'Content-Type': 'application/json',
                 withCredentials: true,
                 credentials: 'same-origin',
-                    params: { page: 1 },
                 })
             .then(response => {
+
                  return response.data;
             });
     }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import authHeader from "@/services/auth-header";
 
 const API_URL = 'http://localhost:8080/api/v1/';
 
@@ -38,6 +39,28 @@ class AuthService {
       alert("error during  TokenExpireDate check");
     }
   }
+    registration(user) {
+        return axios.post(API_URL + 'auth/register', {
+        email: user.email,
+        password: user.password,
+        name: user.username,
+        phoneNumber:user.phoneNumber
+},
+          {headers: authHeader(),
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+          withCredentials: true,
+          credentials: 'same-origin',})
+          .then(response => {
+          localStorage.setItem('user', response.data.token);
+          localStorage.setItem('userId', response.data.user.id);
+          localStorage.setItem('loggedIn', 'true');
+
+          localStorage.setItem('TokenExpireDate', tokenExpireDate());
+          return response.data;
+      });
+
+    }
 }
 function logouts() {
 

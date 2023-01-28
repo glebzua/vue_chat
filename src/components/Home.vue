@@ -1,32 +1,38 @@
 <template>
 
-  <div class="block-users">
-    <th>Users</th>
-    <tr
-        v-for="(index) of users"
+  <input type="search" placeholder="Search..." v-model="search" style="width: 100%">
+
+  <div style="width: 90%">
+    <th class="block-users-home-page">Users</th>
+    <tr class="block-users-home-page"
+        v-for="(index) of filteredData"
         id="app"
         :key="index"
     >
-      <td >{{index.name}}
+      <td class="block-request-img" >
+        <p>
         <img
             v-if="(!contacts.some(data => data.contactId === index.id))"
 
             @click="clickUser(index.id,index.name)"
 
-                    @mouseenter="mouseOverId(index.id)"
-                    @mouseleave="mouseleaveId"
+            @mouseenter="mouseOverId(index.id)"
+            @mouseleave="mouseLeaveId"
 
             src="../assets/request-send.png"
             width="25"
 
         >
+        </p>
+      </td>
+      <td class="block-users">{{index.name}}
+
 
       </td>
-      <td v-if="inContacts(index.id)">{{ status }}</td>
-     <td v-if="hover===index.id">{{ requestState }}</td>
+      <td class="block-users-status" v-if="inContacts(index.id)">{{ status }}</td>
+     <td class="block-users-request" v-if="hover===index.id">{{ requestState }}</td>
     </tr>
   </div>
-
 
 
 </template>
@@ -48,6 +54,7 @@ export default {
   data() {
     return {
 
+      loading: false,
       users:[],
       nickname:null,
       errors:[],
@@ -56,9 +63,13 @@ export default {
       requestState:'send chat request',
       contacts:[],
       status:null,
+      search:'',
 
     }
   },
+
+
+
   mounted(){
     AuthService.tokenExpireCheck()
     this.getUsers()
@@ -66,6 +77,15 @@ export default {
 
   },
   computed: {
+    filteredData() {
+      return this.users
+          .filter(
+              (entry) => this.users.length
+                  ? Object.keys(this.users[0])
+                      .some(key => ('' + entry[key]).toLowerCase().includes(this.search))
+                  : true
+          );
+    },
 
     loggedIn() {
       try {
@@ -80,35 +100,15 @@ export default {
   },
   methods: {
 
-    inContacts(id){
-       try{
-        if(this.contacts.length===0){
-          this.contacts.contactId=0
-            this.status="You dont add any  user to contacts"
-            return this.status
-          }
 
-             if(this.contacts.length!=0){
-              if(this.contacts.find(data => data.contactId ===id)){
-                this.status="this  contact already in contacts list"
-                return this.status
-              }
-      }
-      }catch
-                    (error)
-      {
-        console.log("inContacts catch Error: ", error);
-      }
-      return false
-    },
     getContacts(event) {
        this.$store.dispatch("contacts/GetContacts", event).then(
           () =>
               this.contacts=contacts.state.contacts,
-           this.$store.state.contacts.contacts=this.contacts  ,
+              this.$store.state.contacts.contacts=this.contacts,
           (error) => {
-
-            this.loading = false;
+console.log(" home page    (error) =>")
+            // this.loading = false;
             this.message =
                 (error.response &&
                     error.response.data &&
@@ -118,6 +118,20 @@ export default {
           }
       );
     },
+    inContacts(id){
+      try{if(this.contacts.length!=0){
+          if(this.contacts.find(data => data.contactId ===id)){
+            this.status="this contact already in contacts list"
+            return this.status
+          }
+        }
+      }catch
+          (error)
+      {
+        console.log("inContacts catch Error: ", error);
+      }
+      return false
+    },
     logOut() {
       this.$store.dispatch('auth/logout');
       this.$router.push('/login');
@@ -126,10 +140,14 @@ export default {
     },
     mouseOverId(userId){
       this.hover=userId
+      this.requestState='send chat request'
      },
-    mouseleaveId(){
-         this.requestState='send chat request'
+    mouseLeaveId(){
+      this.hover=false
+         this.requestState=''
+
     },
+
     getUsers(event) {
 
       this.$store.dispatch("users/GetUsers", event).then(
@@ -147,18 +165,16 @@ export default {
       );
     },
 
-    async clickUser(userId,userName) {
-      try {
-        console.log("this.clickedUser,this.nickname =",{
-
-        });
-        await this.$store.dispatch("messages/SendRequest", {
+    clickUser(userId,userName) {
+      this.loading = true;
+        this.$store.dispatch("messages/SendRequest", {
           userId:userId
           ,nickname:userName})
             .then(response=>{
               this.requestState = response,
-                  console.log("this.requestState =",this.requestState),
+                  // console.log("this.requestState =",this.requestState),
                   (error) => {
+                    this.loading = false;
                     this.message =
                         (error.response &&
                             error.response.data &&
@@ -167,16 +183,14 @@ export default {
                         error.toString();
                   }}
             );
-      }catch
-          (error)
-      {
-        console.log("catch Error: ", error);
-
-      }
     }
-
   }}
 </script>
-<style >
+<style scoped>
+.block-request-img{width:5%;height:90%;overflow:auto;float:left}
+.block-users{width:35%;height:90%;overflow:auto;float:left}
+.block-users-status{width:35%;height:70%;overflow:auto;float:left}
+.block-users-request{width:40%;height:90%;overflow:auto;float:left;}
+.block-users-home-page{width:100%;height:10%;overflow:auto;float:left}
 
 </style>

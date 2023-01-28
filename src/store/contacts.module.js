@@ -12,6 +12,23 @@ export const contacts = {
     GetContacts({ commit }, contacts) {
       return ContactsService.GetContacts(contacts).then(
           contacts => {
+           try {if (contacts===null){
+
+              contacts= [{
+                "id": 0,
+                  "userId": localStorage.getItem('userId'),
+                  "contactId": 0,
+                  "activated": false,
+                  "chatId": "",
+                  "nickname": "",
+                  "createdDate": ""
+              }
+            ]
+              // console.log(contacts)
+              return Promise.resolve(contacts);
+            }}catch (e) {
+              return Promise.reject(e);
+            }
           commit('GetContactsSuccess', contacts);
           return Promise.resolve(contacts);
         },

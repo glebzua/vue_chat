@@ -26,7 +26,6 @@ class MessagesService {
                 credentials: 'same-origin',
             })
             .then(response => {
-                // console.log("r.response HadNewMessages",response.data)
                 return response.data;
 
             });
@@ -62,13 +61,10 @@ class MessagesService {
                 credentials: 'same-origin',})
 
             .then(r => {
-               console.log("r.response",r)
                 if (r.status === 201) {
-                    console.log("r.status === 201")
                     return "request sended";
                 }
                 if (r.response.status === 400) {
-                    console.log("r.response 400",r.response.data)
                    return r.response.data;
                 }
                     return r.data;
