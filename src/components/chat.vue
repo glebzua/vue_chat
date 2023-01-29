@@ -1,6 +1,9 @@
 <template>
-
-  <div class="block-contacts">
+  <input class="block-message"  :disabled="selectRecipient ? disabled : ''"
+         v-model="textMessage" placeholder="textMessage"
+         @keyup.enter = "SendMessage(clickedChat,messageRecipient,textMessage)"
+         style="width: 100%">
+   <div class="block-contacts">
     <th>Contact</th>
     <tr
         v-for="(contIndex) of contacts"
@@ -17,41 +20,41 @@
     </tr>
   </div>
   <div class="block-messages">  <th>Messages</th>
-
     <table > <td>{{messageState}}</td>
     </table>
     <table v-for="(messagesIndex) of messages"
            :key="messagesIndex">
-
       <td class="message-date"> {{messagesIndex.createdDate}}</td>-->
       <td class="message-owner" v-if="messageOwner(messagesIndex.senderId)">{{messagesIndex.message}}</td>
       <td class="message-recipient" v-if="!messageOwner(messagesIndex.senderId)">{{messagesIndex.message}}</td>
-      <td class="message-receive-status" v-if="messagesIndex.received===false && messageRecipient===messagesIndex.recipientId" > <img
-          src="../assets/not_receive-icon.png"
-          width="25"
-      ></td>
-      <td v-else-if="messagesIndex.received===true && messageRecipient===messagesIndex.recipientId" > <img
-          src="../assets/receive-icon.png"
-          width="25"
-      ></td>
-
-      <td class="message-send-status" v-if="messagesIndex.sended===false && messageRecipient===messagesIndex.recipientId" > <img
+      <td class="message-receive-status">
+        <div v-if="messagesIndex.received===false && messageRecipient===messagesIndex.recipientId" >
+              <img
+              src="../assets/not_receive-icon.png"
+              width="25">
+        </div>
+        <div v-else-if="messagesIndex.received===true && messageRecipient===messagesIndex.recipientId" >
+               <img
+               src="../assets/receive-icon.png"
+               width="25">
+        </div>
+      </td>
+      <td class="message-send-status">
+        <div class="message-send-status" v-if="messagesIndex.sended===false && messageRecipient===messagesIndex.recipientId" >
+          <img
           src="../assets/mail-send-icon.png"
-          width="25"
-      ></td>
-      <td class="message-send-status" v-else-if="messagesIndex.sended===true && messageRecipient===messagesIndex.recipientId" >
-        <img
-            src="../assets/mail-sended-icon.png"
-            width="25"
-        ></td>
+           width="25">
+
+        </div>
+        <div class="message-send-status" v-else-if="messagesIndex.sended===true && messageRecipient===messagesIndex.recipientId" >
+          <img
+          src="../assets/mail-sended-icon.png"
+          width="25">
+
+        </div>
+
+      </td>
     </table>
-  </div>
-  <div class="block-message">
-    <span>Message to id{{messageRecipient}} :</span>
-    <input v-model="textMessage" placeholder="text here" @keyup.enter = "SendMessage(clickedChat,messageRecipient,textMessage)"/>
-  </div>
-  <div class="block-send-button">
-    <span @click="SendMessage(clickedChat,messageRecipient,textMessage)" > button here </span>
   </div>
 
 
@@ -70,7 +73,7 @@ export default {
     return {
       localStorageUserId:null,
       clickedChat:null,
-      textMessage:null,
+      textMessage:"choose recipient first",
       tmp:null,
       messageState:null,
       messages:[],
@@ -110,7 +113,15 @@ export default {
     }
     this.hadNewMessages()
   },
+computed: {
+  selectRecipient() {
 
+
+    return this.messageRecipient !== null ? true : false
+
+
+  },
+},
   methods: {
     messageOwner(id){
       if (id.toString()===this.localStorageUserId){
@@ -135,12 +146,15 @@ export default {
       );
     },
     clickedCont(messageObj){
+      this.textMessage=null
       this.messageState=""
       this.tmp=null
       if(messageObj.chatId===this.emptyChat){
         this.messageState="user don't accept chat request from "+messageObj.createdDate
         this.messages=""
         this.messageRecipient=null
+        this.textMessage="cant send messages to this contact"
+
         return
       }
       this.$store.dispatch("getMessages/GetMessages", messageObj.chatId).then(
@@ -242,10 +256,11 @@ export default {
 </script>
 
 <style scoped>
-.block-contacts{width:30%;height:70%;overflow:auto;float:left}
-.block-messages{width:70%;height:70%;overflow:auto}
-.block-message{width:90%;height:30%;overflow:auto;float:left}
-.block-send-button{width:10%;height:30%;overflow:auto;float:right }
+.block-contacts{width:30%;height:85%;overflow:auto;float:left}
+.block-messages{width:70%;height:85%;overflow:auto}
+.block-message{width:100%;overflow:auto;float:left}
+/*.block-message{background:#212529;color:rgba(255,255,255,.55);width:90%;height:8.1%;overflow:auto;float:left}*/
+/*.block-send-button{background:#212529;color:rgba(255,255,255,.55);width:10%;height:8.1%;overflow:auto;float:right }*/
 .message-date{width:10%;}
 .message-owner{width:50%;  color: blueviolet; text-align: left}
 .message-recipient{width:50%;color: green; text-align: right}

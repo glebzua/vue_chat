@@ -1,8 +1,10 @@
 <template>
-
   <input type="search" placeholder="Search..." v-model="search" style="width: 100%">
+  <div class="block-home-page">
 
-  <div style="width: 90%">
+
+
+  <div>
     <th class="block-users-home-page">Users</th>
     <tr class="block-users-home-page"
         v-for="(index) of filteredData"
@@ -33,6 +35,10 @@
      <td class="block-users-request" v-if="hover===index.id">{{ requestState }}</td>
     </tr>
   </div>
+
+  </div>
+
+
 
 
 </template>
@@ -187,10 +193,12 @@ console.log(" home page    (error) =>")
   }}
 </script>
 <style scoped>
-.block-request-img{width:5%;height:90%;overflow:auto;float:left}
-.block-users{width:35%;height:90%;overflow:auto;float:left}
+.block-home-page{width:100%;height:90%;overflow:auto;float:left}
+.block-request-img{width:5%;height:85%;overflow:auto;float:left}
+.block-users{width:35%;height:70%;overflow:auto;float:left}
 .block-users-status{width:35%;height:70%;overflow:auto;float:left}
-.block-users-request{width:40%;height:90%;overflow:auto;float:left;}
+.block-users-request{width:40%;height:70%;overflow:auto;float:left;}
 .block-users-home-page{width:100%;height:10%;overflow:auto;float:left}
+
 
 </style>

@@ -2,7 +2,7 @@
   <div class="home-page">
 
     <nav class="navbar navbar-expand navbar-dark bg-dark">
-      <div class="navbar-nav mr-auto" >
+<!--      <div class="navbar-nav mr-auto" >-->
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0 mb-2">
             <li class="nav-item">
@@ -21,13 +21,7 @@
                 Chat
               </router-link>
             </li>
-          </ul>
-          <div
-              v-if="!loggedIn"
-              class="navbar-nav mr-auto"
-          >
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0 mb-2">
-            <li class="nav-item">
+            <li class="nav-item" v-if="!loggedIn">
               <router-link
                   to="/login"
                   class="nav-link"
@@ -35,7 +29,7 @@
                 Login
               </router-link>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" v-if="!loggedIn">
               <router-link
                   to="/registration"
                   class="nav-link"
@@ -43,14 +37,16 @@
                 Registration
               </router-link>
             </li>
-            </ul>
-          </div>
+          </ul>
+          <ul class="navbar-nav  mb-2 mb-lg-0 mb-6">
+            <li>
 
-          <div
-              v-if="loggedIn"
-              class="navbar-nav ml-auto"
-          >
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0 mb-2">
+              <span class="nav-link">  {{ pusherNewUser }}  </span>
+
+            </li>
+          </ul>
+
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 mb-6"  v-if="loggedIn">
             <li class="nav-item">
               <a
                   class="nav-link"
@@ -60,9 +56,12 @@
               </a>
             </li>
             </ul>
-          </div>
+
+
+
+
         </div>
-      </div>
+<!--      </div>-->
     </nav>
 
   </div>
@@ -77,7 +76,13 @@
 <script>
 
 export default {
+  data() {
+    return {
+      pusherNewUsers:[""],
+      pusherNewUser:null
+     }},
   computed: {
+
     loggedIn() {
       try {
       if(this.$store.state.auth.user!=null){
@@ -88,6 +93,16 @@ export default {
       }
       return this.$store.state.auth.user
     },
+  },
+  mounted() {
+    const channel = this.$pusher.subscribe('my-channel');
+    channel.bind('new-user', event => {
+      this.pusherNewUsers.push(event)
+      this.pusherNewUser=(Object.entries(this.pusherNewUsers[this.pusherNewUsers.length-1])).join(" :")
+    })
+    console.log('subscribing to `my-channel`...', {
+      $pusher: this.$pusher,
+    })
   },
   methods: {
 
