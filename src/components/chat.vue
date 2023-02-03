@@ -1,16 +1,17 @@
 <template>
-  <input class="block-message"  :disabled="selectRecipient ? disabled : ''"
-         v-model="textMessage" placeholder="textMessage"
-         @keyup.enter = "SendMessage(clickedChat,messageRecipient,textMessage)"
+    <input class="block-message"  :disabled="selectRecipient ? disabled : ''"
+       v-model="textMessage" placeholder="text message here, tap Enter to send"
+         @keyup.enter = "SendMessage()"
          style="width: 100%">
-   <div class="block-contacts">
+
+  <div class="block-contacts">
     <th>Contact</th>
     <tr
         v-for="(contIndex) of contacts"
         id="app"
         :key="contIndex"
     >
-     <td @click="clickedCont(contIndex)" >
+      <td @click="clickedCont(contIndex)" >
         {{contIndex.nickname}}-
       </td>
       <img v-if="haveUnreadMessage(contIndex.contactId)"
@@ -18,6 +19,7 @@
            width="25"
       >
     </tr>
+
   </div>
   <div class="block-messages">  <th>Messages</th>
     <table > <td>{{messageState}}</td>
@@ -25,31 +27,37 @@
     <table v-for="(messagesIndex) of messages"
            :key="messagesIndex">
       <td class="message-date"> {{messagesIndex.createdDate}}</td>-->
-      <td class="message-owner" v-if="messageOwner(messagesIndex.senderId)">{{messagesIndex.message}}</td>
-      <td class="message-recipient" v-if="!messageOwner(messagesIndex.senderId)">{{messagesIndex.message}}</td>
+
+      <td class="message-owner" v-if="messageOwner(messagesIndex.senderId)">
+        {{messagesIndex.message}}{{messagesIndex.fileloc}}</td>
+      <td class="message-recipient" v-if="!messageOwner(messagesIndex.senderId)">
+
+        <p @click="openImage(messagesIndex.fileloc)">{{messagesIndex.fileloc}}</p>
+        {{messagesIndex.message}}</td>
       <td class="message-receive-status">
-        <div v-if="messagesIndex.received===false && messageRecipient===messagesIndex.recipientId" >
-              <img
+        <div v-if="messagesIndex.received===false && !messageOwner(messagesIndex.recipientId)" >
+          <img
               src="../assets/not_receive-icon.png"
               width="25">
+
         </div>
-        <div v-else-if="messagesIndex.received===true && messageRecipient===messagesIndex.recipientId" >
-               <img
-               src="../assets/receive-icon.png"
-               width="25">
+        <div v-else-if="messagesIndex.received===true && messageOwner(messagesIndex.recipientId)" >
+          <img
+              src="../assets/receive-icon.png"
+              width="25">
+
         </div>
       </td>
       <td class="message-send-status">
-        <div class="message-send-status" v-if="messagesIndex.sended===false && messageRecipient===messagesIndex.recipientId" >
+        <div class="message-send-status" v-if="messagesIndex.sended===false && !messageOwner(messagesIndex.recipientId)" >
           <img
-          src="../assets/mail-send-icon.png"
-           width="25">
-
+              src="../assets/mail-send-icon.png"
+              width="25">
         </div>
-        <div class="message-send-status" v-else-if="messagesIndex.sended===true && messageRecipient===messagesIndex.recipientId" >
+        <div class="message-send-status"  v-else-if="messagesIndex.sended===true && messageOwner(messagesIndex.recipientId)" >
           <img
-          src="../assets/mail-sended-icon.png"
-          width="25">
+              src="../assets/mail-sended-icon.png"
+              width="25">
 
         </div>
 
@@ -62,15 +70,16 @@
 
 <script>
 import AuthService from "@/services/auth.service";
-import {getMessages, messages} from "@/store/messages.module";
 import * as $state from "@/store/messages.module";
 import {contacts} from "@/store/contacts.module";
+import {getMessages, messages} from "@/store/messages.module";
 
 export default {
   name: "Contacts-page",
 
   data() {
     return {
+      disabled:null,
       localStorageUserId:null,
       clickedChat:null,
       textMessage:"choose recipient first",
@@ -82,6 +91,11 @@ export default {
       contacts: [],
       errors: [],
       pusherMessagesContacts: [],
+      tmppusherMessagesContacts: [],
+      messageObj:{
+        chatId:null
+      },
+
       sendMessage:{
         messageRecipientId:null,
         clickedChatId:null,
@@ -90,7 +104,9 @@ export default {
   },
 
   mounted() {
-
+    $state.getMessages.state.recipientId=null
+    $state.getMessages.state.chatId=null
+    // this.img="\"../assets/logo.png\""
     this.messageRecipient=null
     this.localStorageUserId=localStorage.getItem('userId')
     this.getContacts()
@@ -113,23 +129,26 @@ export default {
     }
     this.hadNewMessages()
   },
-computed: {
-  selectRecipient() {
+  computed: {
+    selectRecipient() {
+      console.log("selectRecipient")
+
+      return this.messageRecipient !== null ? true : false
 
 
-    return this.messageRecipient !== null ? true : false
-
-
+    },
   },
-},
   methods: {
     messageOwner(id){
+
       if (id.toString()===this.localStorageUserId){
-         return false
+        return false
       }
       return true
     },
-     getContacts(event) {
+
+    getContacts(event) {
+      console.log("getContacts")
       this.$store.dispatch("contacts/GetContacts", event).then(
           () =>
               this.contacts=contacts.state.contacts,
@@ -146,7 +165,16 @@ computed: {
       );
     },
     clickedCont(messageObj){
-      this.textMessage=null
+      this.messageRecipient=messageObj.contactId
+
+      if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === messageObj.contactId))!==undefined) {
+
+
+        this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === messageObj.contactId)), 1)
+
+      }
+
+        this.textMessage=null
       this.messageState=""
       this.tmp=null
       if(messageObj.chatId===this.emptyChat){
@@ -157,23 +185,25 @@ computed: {
 
         return
       }
+      this.getMessages(messageObj)
+    },
+
+    getMessages(messageObj){
+
       this.$store.dispatch("getMessages/GetMessages", messageObj.chatId).then(
           () => {
             try {
               if(getMessages.state.getMessages===null){
-                  $state.getMessages.state.recipientId=null
+                $state.getMessages.state.recipientId=null
                 this.messageState="you have no massages with this user!"
               }
               this.messages = $state.getMessages.state.getMessages
               $state.getMessages.state.recipientId=messageObj.contactId
               $state.getMessages.state.chatId=messageObj.chatId
               this.clickedChat = messageObj.chatId
-              this.messageRecipient = messageObj.contactId
-              this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf({
-                "NewMessageFrom": messageObj.contactId
-              }), 1);
+
                }catch (e) {
-              console.log("clickedCont",e)
+              console.log("clickedCont error",e)
               return false;
             }
           },
@@ -187,11 +217,11 @@ computed: {
           }
       );
     },
-
     hadNewMessages(){
+      console.log("hadNewMessages")
       this.$store.dispatch("hadNewMessages/HadNewMessages").then(
           () => {
-           },
+          },
           (error) => {
             this.message =
                 (error.response &&
@@ -202,12 +232,13 @@ computed: {
           }
       );
     },
-    SendMessage(clickedChat,messageRecipient,textMessage)
+    SendMessage()
     {
-      this.sendMessage.clickedChatId=clickedChat
-      this.sendMessage.messageRecipientId=messageRecipient
-      this.sendMessage.text=textMessage
-       this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
+      console.log("SendMessage",)
+     this.sendMessage.clickedChatId= $state.getMessages.state.chatId
+    this.sendMessage.messageRecipientId= $state.getMessages.state.recipientId
+      this.sendMessage.text=this.textMessage
+      this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
 
           this.messages = messages.state.getMessages,
 
@@ -230,13 +261,18 @@ computed: {
 
     },
     checkAvailability(arr, val) {
-
+console.log("checkAvailability",arr, " -",val,arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal)))
       return arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal))
     },
     haveUnreadMessage(contactId){
+       console.log("haveUnreadMessage", contactId)
       try{
-        if(this.pusherMessagesContacts.length>0 && contactId!=null){
-            if(contactId===this.messageRecipient){
+         if(this.pusherMessagesContacts.length>0 && contactId!=null){
+
+          if(contactId===this.messageRecipient){
+
+
+
             this.clickedCont({chatId:$state.getMessages.state.chatId,
               contactId:$state.getMessages.state.recipientId})
             return
@@ -244,9 +280,9 @@ computed: {
         }
 
       }catch (e) {
-        console.log("haveUnreadMessage", e)
+        console.log("haveUnreadMessage error:", e)
       }
-      return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
+         return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
 
     },
 
@@ -259,8 +295,6 @@ computed: {
 .block-contacts{width:30%;height:85%;overflow:auto;float:left}
 .block-messages{width:70%;height:85%;overflow:auto}
 .block-message{width:100%;overflow:auto;float:left}
-/*.block-message{background:#212529;color:rgba(255,255,255,.55);width:90%;height:8.1%;overflow:auto;float:left}*/
-/*.block-send-button{background:#212529;color:rgba(255,255,255,.55);width:10%;height:8.1%;overflow:auto;float:right }*/
 .message-date{width:10%;}
 .message-owner{width:50%;  color: blueviolet; text-align: left}
 .message-recipient{width:50%;color: green; text-align: right}
