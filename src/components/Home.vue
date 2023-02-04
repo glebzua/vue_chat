@@ -145,6 +145,12 @@ console.log(" home page    (error) =>")
 
     },
     mouseOverId(userId){
+       if(userId===parseInt(localStorage.getItem('userId'))){
+        this.requestState='this is You'
+        console.log("ifok", this.requestState)
+         this.hover=userId
+        return
+      }
       this.hover=userId
       this.requestState='send chat request'
      },
@@ -172,6 +178,9 @@ console.log(" home page    (error) =>")
     },
 
     clickUser(userId,userName) {
+      if(this.requestState==='this is You'){
+        return
+      }
       this.loading = true;
         this.$store.dispatch("messages/SendRequest", {
           userId:userId
