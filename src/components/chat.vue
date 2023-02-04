@@ -11,7 +11,8 @@
         id="app"
         :key="contIndex"
     >
-      <td @click="clickedCont(contIndex)" >
+      <td class="clicked-Cont"
+          @click="clickedCont(contIndex)"  >
         {{contIndex.nickname}}-
       </td>
       <img v-if="haveUnreadMessage(contIndex.contactId)"
@@ -35,11 +36,10 @@
         <p @click="openImage(messagesIndex.fileloc)">{{messagesIndex.fileloc}}</p>
         {{messagesIndex.message}}</td>
       <td class="message-receive-status">
-        <div v-if="messagesIndex.received===false && !messageOwner(messagesIndex.recipientId)" >
+        <div v-if="messagesIndex.received===false && messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/not_receive-icon.png"
               width="25">
-
         </div>
         <div v-else-if="messagesIndex.received===true && messageOwner(messagesIndex.recipientId)" >
           <img
@@ -93,7 +93,8 @@ export default {
       pusherMessagesContacts: [],
       tmppusherMessagesContacts: [],
       messageObj:{
-        chatId:null
+        chatId:null,
+        contactId:null,
       },
 
       sendMessage:{
@@ -131,17 +132,18 @@ export default {
   },
   computed: {
     selectRecipient() {
-      console.log("selectRecipient")
+
 
       return this.messageRecipient !== null ? true : false
 
 
     },
+
   },
   methods: {
     messageOwner(id){
 
-      if (id.toString()===this.localStorageUserId){
+      if (id.toString()===localStorage.getItem('userId')){
         return false
       }
       return true
@@ -165,6 +167,7 @@ export default {
       );
     },
     clickedCont(messageObj){
+
       this.messageRecipient=messageObj.contactId
 
       if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === messageObj.contactId))!==undefined) {
@@ -265,12 +268,10 @@ console.log("checkAvailability",arr, " -",val,arr.some((arrVal) => JSON.stringif
       return arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal))
     },
     haveUnreadMessage(contactId){
-       console.log("haveUnreadMessage", contactId)
-      try{
+       try{
          if(this.pusherMessagesContacts.length>0 && contactId!=null){
 
           if(contactId===this.messageRecipient){
-
 
 
             this.clickedCont({chatId:$state.getMessages.state.chatId,
