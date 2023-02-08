@@ -1,17 +1,16 @@
 <template>
     <input class="block-message"  :disabled="selectRecipient ? disabled : ''"
        v-model="textMessage" placeholder="text message here, tap Enter to send"
-         @keyup.enter = "SendMessage()"
-         style="width: 100%">
+         @keyup.enter = "sendingMessage()">
 
-  <div class="block-contacts">
+  <div class="block-contacts" >
     <th>Contact</th>
     <tr
         v-for="(contIndex) of contacts"
         id="app"
         :key="contIndex"
     >
-      <td class="clicked-Cont"
+      <td  class="clicked-Cont"
           @click="clickedCont(contIndex)"  >
         {{contIndex.nickname}}-
       </td>
@@ -28,12 +27,31 @@
     <table v-for="(messagesIndex) of messages"
            :key="messagesIndex">
       <td class="message-date"> {{messagesIndex.createdDate}}</td>-->
-
       <td class="message-owner" v-if="messageOwner(messagesIndex.senderId)">
-        {{messagesIndex.message}}{{messagesIndex.fileloc}}</td>
+        <p  v-if="messagesIndex.fileloc!==''" >
+          <img
+               @click="openImage(messagesIndex.fileloc)"
+              src="../assets/logo.png"
+              width="25">
+        </p>
+        <transition>
+          <img  class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')"
+               :src="img"
+          >
+        </transition>
+        {{messagesIndex.message}}</td>
       <td class="message-recipient" v-if="!messageOwner(messagesIndex.senderId)">
-
-        <p @click="openImage(messagesIndex.fileloc)">{{messagesIndex.fileloc}}</p>
+        <p  v-if="messagesIndex.fileloc!==''" >
+          <img
+              @click="openImage(messagesIndex.fileloc)"
+              src="../assets/logo.png"
+              width="25">
+        </p>
+        <transition @click="showModal = !showModal">
+          <img class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')"
+               :src="img"
+          >
+        </transition>
         {{messagesIndex.message}}</td>
       <td class="message-receive-status">
         <div v-if="messagesIndex.received===false && messageOwner(messagesIndex.recipientId)" >
@@ -45,7 +63,6 @@
           <img
               src="../assets/receive-icon.png"
               width="25">
-
         </div>
       </td>
       <td class="message-send-status">
@@ -65,23 +82,29 @@
     </table>
   </div>
 
-
+<!--<div class="mt-4 text-center">-->
+<!--      <button v-on:click="showModal = true" class="mx-auto bg-primary rounded py-2 px-8 text-white">Open</button>-->
+<!--      <button class="save-btn" @click="showModal = false">close Modal</button>-->
+<!--    </div>-->
 </template>
 
 <script>
+
 import AuthService from "@/services/auth.service";
 import * as $state from "@/store/messages.module";
 import {contacts} from "@/store/contacts.module";
-import {getMessages, messages} from "@/store/messages.module";
+// import {getMessages, messages} from "@/store/messages.module";
+import {messages} from "@/store/messages.module";
 
 export default {
   name: "Contacts-page",
 
   data() {
     return {
+      img:null,
+      showModal: false,
       disabled:null,
       localStorageUserId:null,
-      clickedChat:null,
       textMessage:"choose recipient first",
       tmp:null,
       messageState:null,
@@ -96,27 +119,20 @@ export default {
         chatId:null,
         contactId:null,
       },
-
       sendMessage:{
         messageRecipientId:null,
         clickedChatId:null,
         text:null},
     }
   },
-
   mounted() {
     $state.getMessages.state.recipientId=null
     $state.getMessages.state.chatId=null
-    // this.img="\"../assets/logo.png\""
     this.messageRecipient=null
     this.localStorageUserId=localStorage.getItem('userId')
     this.getContacts()
     AuthService.tokenExpireCheck()
     try{
-      if ($state.getMessages.state.chatId != null) {
-        this.clickedChat = $state.getMessages.state.chatId
-      }
-
       this.contacts= this.$store.state.contacts.contacts
       const channel = this.$pusher.subscribe(localStorage.getItem('userId'));
       channel.bind('NewMessage', event => {
@@ -131,7 +147,8 @@ export default {
     this.hadNewMessages()
   },
   computed: {
-    selectRecipient() {
+
+       selectRecipient() {
 
 
       return this.messageRecipient !== null ? true : false
@@ -196,14 +213,14 @@ export default {
       this.$store.dispatch("getMessages/GetMessages", messageObj.chatId).then(
           () => {
             try {
-              if(getMessages.state.getMessages===null){
+              if($state.getMessages.state.getMessages===null){
                 $state.getMessages.state.recipientId=null
                 this.messageState="you have no massages with this user!"
               }
               this.messages = $state.getMessages.state.getMessages
               $state.getMessages.state.recipientId=messageObj.contactId
               $state.getMessages.state.chatId=messageObj.chatId
-              this.clickedChat = messageObj.chatId
+              // this.clickedChat = messageObj.chatId
 
                }catch (e) {
               console.log("clickedCont error",e)
@@ -235,7 +252,32 @@ export default {
           }
       );
     },
-    SendMessage()
+    openImage(fileloc){
+      console.log("this.showModal",this.showModal,this.img)
+      this.showModal =!this.showModal
+      console.log("this.img",this.img)
+
+      this.$store.dispatch("openImage/OpenImage", fileloc).then(
+          response=>{
+            this.img=response
+            console.log("response",
+                response,
+                // $state.openImage.state.openImage,
+          ),
+
+
+          (error) => {
+            this.message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message ||
+                error.toString();
+          }}
+      );
+
+    },
+    sendingMessage()
     {
       console.log("SendMessage",)
      this.sendMessage.clickedChatId= $state.getMessages.state.chatId
@@ -301,5 +343,21 @@ console.log("checkAvailability",arr, " -",val,arr.some((arrVal) => JSON.stringif
 .message-recipient{width:50%;color: green; text-align: right}
 .message-receive-status{width:5%;}
 .message-send-status{width:5%;}
+
+
+.modal-overlay {
+  position: fixed;
+  top: 10%;
+  bottom: 0;
+  left: 30%;
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  background-color: #fff;
+  /*background-color: #000000da;*/
+}
+
+
+
 </style>
 

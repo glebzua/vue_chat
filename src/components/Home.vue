@@ -147,8 +147,7 @@ console.log(" home page    (error) =>")
     mouseOverId(userId){
        if(userId===parseInt(localStorage.getItem('userId'))){
         this.requestState='this is You'
-        console.log("ifok", this.requestState)
-         this.hover=userId
+       this.hover=userId
         return
       }
       this.hover=userId

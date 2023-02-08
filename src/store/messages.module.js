@@ -118,3 +118,36 @@ export const getMessages = {
       state.getMessages = null;
     },
   }}
+
+
+
+export const openImage = {
+  namespaced: true,
+  state: initialState,
+  actions: {
+    OpenImage({ commit }, imageId) {
+      return MessagesService.OpenImage(imageId).then(
+          openImage => {
+            commit('OpenImageSuccess', openImage);
+            return Promise.resolve(openImage);
+          },
+          error => {
+            commit('OpenImageFailure');
+            return Promise.reject(error);
+          }
+      );
+    },
+
+  },
+  mutations: {
+    OpenImageSuccess(state, openImage) {
+      state.status.openImage = true;
+      state.openImage = openImage;
+    },
+    OpenImageFailure(state) {
+      state.status.openImage = false;
+      state.image = null;
+    },
+
+  }
+};

@@ -72,6 +72,18 @@ class MessagesService {
 
     }
 
+    OpenImage(imageId) {
+        return axios
+            .get(API_URL + 'images/'+imageId,{ headers: authHeader(),
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
+                withCredentials: true,
+                credentials: 'same-origin',
+            })
+            .then(response => {
+                return response.data;
+            });
+    }
 }
 
 export default new MessagesService();
