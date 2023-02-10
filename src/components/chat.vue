@@ -1,7 +1,16 @@
 <template>
-    <input class="block-message"  :disabled="selectRecipient ? disabled : ''"
-       v-model="textMessage" placeholder="text message here, tap Enter to send"
-         @keyup.enter = "sendingMessage()">
+  <div class="block-message"  >
+    <input class="block-message-text" :disabled="selectRecipient ? disabled : ''"
+           v-model="textMessage" placeholder="text message here, tap Enter to send"
+           @keyup.enter = "sendingMessage()">
+    <input class="block-message-image" :disabled="selectRecipient ? disabled : ''"
+           type="file" id="file" ref="file" accept="image/jpeg"
+           placeholder="drop image here, tap Enter to send"
+           v-on:change="handleFileUpload()"/>
+<!--           @keyup.enter = "sendImage">-->
+    <button class="block-message-image-submit" v-on:click="sendImage()">Submit</button>
+  </div>
+
 
   <div class="block-contacts" >
     <th>Contact</th>
@@ -34,8 +43,9 @@
               src="../assets/logo.png"
               width="25">
         </p>
-        <transition>
-          <img  class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')"
+        <transition @click="showModal = !showModal" class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')" >
+
+          <img
                :src="img"
           >
         </transition>
@@ -47,8 +57,9 @@
               src="../assets/logo.png"
               width="25">
         </p>
-        <transition @click="showModal = !showModal">
-          <img class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')"
+        <transition duration="100" @click="showModal = !showModal" class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')">
+
+          <img
                :src="img"
           >
         </transition>
@@ -101,6 +112,10 @@ export default {
 
   data() {
     return {
+
+      file:'',
+      previewImage:null,
+      emptyImg:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAHYcAAB2HAY/l8WUAAAAMSURBVBhXY/j//z8ABf4C/qc1gYQAAAAASUVORK5CYII=",
       img:null,
       showModal: false,
       disabled:null,
@@ -123,6 +138,11 @@ export default {
         messageRecipientId:null,
         clickedChatId:null,
         text:null},
+      sendImageObj : {
+        chatId: null,
+        contactId: null,
+        formData:null
+      },
     }
   },
   mounted() {
@@ -252,21 +272,46 @@ export default {
           }
       );
     },
-    openImage(fileloc){
-      console.log("this.showModal",this.showModal,this.img)
-      this.showModal =!this.showModal
-      console.log("this.img",this.img)
+    handleFileUpload() {
+      this.file = this.$refs.file.files[0];
+    },
+    sendImage() {
+         try {
+          this.sendImageObj.chatId = $state.getMessages.state.chatId,
+          this.sendImageObj.contactId = $state.getMessages.state.recipientId
+          this.sendImageObj.formData=document.querySelector('#file').files[0]
+        } catch (e) {
+          console.log(e, this.sendImageObj)
+        }
 
+        this.$store.dispatch("sendImage/SendImage", this.sendImageObj).then(
+
+              // this.img = response
+              // console.log("response", response)
+              setTimeout(() => {
+                  this.clickedCont({chatId:this.sendImageObj.chatId,
+                    contactId:this.sendImageObj.contactId});
+            }, 600),
+                  (error) => {
+                    this.message =
+                        (error.response &&
+                            error.response.data &&
+                            error.response.data.message) ||
+                        error.message ||
+                        error.toString();
+                  }
+
+        );
+
+
+    },
+    openImage(fileloc){
+      this.img=this.emptyImg
+      this.showModal =!this.showModal
       this.$store.dispatch("openImage/OpenImage", fileloc).then(
           response=>{
-            this.img=response
-            console.log("response",
-                response,
-                // $state.openImage.state.openImage,
-          ),
-
-
-          (error) => {
+          this.img=response,
+         (error) => {
             this.message =
                 (error.response &&
                     error.response.data &&
@@ -337,7 +382,10 @@ console.log("checkAvailability",arr, " -",val,arr.some((arrVal) => JSON.stringif
 <style scoped>
 .block-contacts{width:30%;height:85%;overflow:auto;float:left}
 .block-messages{width:70%;height:85%;overflow:auto}
-.block-message{width:100%;overflow:auto;float:left}
+.block-message{width:100%;overflow:auto;float:left;border: solid;}
+.block-message-text{width:50%;overflow:auto;float:left;border:none}
+.block-message-image{width:40%;overflow:auto;float:left;border:none}
+.block-message-image-submit{width:10%;overflow:auto;float:left;border:none}
 .message-date{width:10%;}
 .message-owner{width:50%;  color: blueviolet; text-align: left}
 .message-recipient{width:50%;color: green; text-align: right}
@@ -354,9 +402,14 @@ console.log("checkAvailability",arr, " -",val,arr.some((arrVal) => JSON.stringif
   display: flex;
   justify-content: flex-end;
   background-color: #fff;
-  /*background-color: #000000da;*/
-}
+  animation: 1s fadeIn;
 
+}
+@keyframes fadeIn{
+  0% { opacity:0; }
+  66% { opacity:0.3; }
+  100% { opacity:1; }
+}
 
 
 </style>

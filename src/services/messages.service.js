@@ -84,6 +84,22 @@ class MessagesService {
                 return response.data;
             });
     }
+    SendImage(sendImageObj) {
+        return axios
+            .post(API_URL + 'images?chatId='+sendImageObj.chatId+'&recipientId='+sendImageObj.contactId,sendImageObj.formData,
+            {headers: authHeader(),
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'image/jpg',
+                  withCredentials: true,
+                credentials: 'same-origin',})
+
+            .then(response => {
+                if (response.status === 201) {
+                    return response.data;
+                }
+                return response.data;
+            });
+    }
 }
 
 export default new MessagesService();

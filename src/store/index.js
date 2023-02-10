@@ -1,7 +1,7 @@
 import { createStore } from "vuex";
 import { auth } from "./auth.module";
 import { contacts } from "./contacts.module";
-import {getMessages, hadNewMessages, messages, openImage} from "./messages.module";
+import {getMessages, hadNewMessages, messages, openImage,sendImage} from "./messages.module";
 import { users } from "./users.module";
 const store = createStore({
   modules: {
@@ -10,6 +10,7 @@ const store = createStore({
     messages,
     hadNewMessages,
     openImage,
+    sendImage,
     getMessages,
     users,
 

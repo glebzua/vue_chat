@@ -146,7 +146,40 @@ export const openImage = {
     },
     OpenImageFailure(state) {
       state.status.openImage = false;
-      state.image = null;
+      state.openImage = null;
+    },
+
+  }
+};
+
+export const sendImage = {
+  namespaced: true,
+  state: initialState,
+  actions: {
+    SendImage({ commit }, sendImage) {
+      return MessagesService.SendImage(sendImage).then(
+          sendImage => {
+            commit('SendImageSuccess', sendImage);
+            return Promise.resolve(sendImage,);
+          },
+          error => {
+            console.log("mes.mod.SendImage error")
+            commit('SendImageFailure');
+            return Promise.reject(error);
+          }
+      );
+    },
+
+
+  },
+  mutations: {
+    SendImageSuccess(state, sendImage) {
+      state.status.sendImage= true;
+      state.sendImage = sendImage;
+    },
+    SendImageFailure(state) {
+      state.status.sendImage = false;
+      state.sendImage = null;
     },
 
   }
