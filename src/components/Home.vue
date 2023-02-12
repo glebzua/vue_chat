@@ -15,17 +15,13 @@
         <p>
         <img
             v-if="(!contacts.some(data => data.contactId === index.id))"
-
             @click="clickUser(index.id,index.name)"
-
             @mouseenter="mouseOverId(index.id)"
             @mouseleave="mouseLeaveId"
-
             src="../assets/request-send.png"
             width="25"
-
         >
-        </p>
+          </p>
       </td>
       <td class="block-users">{{index.name}}
 

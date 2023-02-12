@@ -5,9 +5,7 @@
            @keyup.enter = "sendingMessage()">
     <input class="block-message-image" :disabled="selectRecipient ? disabled : ''"
            type="file" id="file" ref="file" accept="image/jpeg"
-           placeholder="drop image here, tap Enter to send"
-           v-on:change="handleFileUpload()"/>
-<!--           @keyup.enter = "sendImage">-->
+           placeholder="drop image here, tap Enter to send"/>
     <button class="block-message-image-submit" v-on:click="sendImage()">Submit</button>
   </div>
 
@@ -20,7 +18,7 @@
         :key="contIndex"
     >
       <td  class="clicked-Cont"
-          @click="clickedCont(contIndex)"  >
+          @click="clickedCont(contIndex),clickCont=contIndex.contactId">
         {{contIndex.nickname}}-
       </td>
       <img v-if="haveUnreadMessage(contIndex.contactId)"
@@ -35,36 +33,24 @@
     </table>
     <table v-for="(messagesIndex) of messages"
            :key="messagesIndex">
-      <td class="message-date"> {{messagesIndex.createdDate}}</td>-->
-      <td class="message-owner" v-if="messageOwner(messagesIndex.senderId)">
-        <p  v-if="messagesIndex.fileloc!==''" >
-          <img
+
+      <td class="message-date"> {{ messageDate(messagesIndex.createdDate )}}</td>
+
+      <td :class=messageAlign(messagesIndex.senderId) >
+
+          <img  v-if="messagesIndex.fileloc!==''"
                @click="openImage(messagesIndex.fileloc)"
               src="../assets/logo.png"
               width="25">
-        </p>
-        <transition @click="showModal = !showModal" class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')" >
 
+          <transition class=" modal-overlay" @click="showModal = !showModal"
+                      v-if="showImage(messagesIndex.fileloc)" >
           <img
                :src="img"
           >
         </transition>
         {{messagesIndex.message}}</td>
-      <td class="message-recipient" v-if="!messageOwner(messagesIndex.senderId)">
-        <p  v-if="messagesIndex.fileloc!==''" >
-          <img
-              @click="openImage(messagesIndex.fileloc)"
-              src="../assets/logo.png"
-              width="25">
-        </p>
-        <transition duration="100" @click="showModal = !showModal" class=" modal-overlay" v-if="showModal && (messagesIndex.fileloc!=='')">
-
-          <img
-               :src="img"
-          >
-        </transition>
-        {{messagesIndex.message}}</td>
-      <td class="message-receive-status">
+        <td class="message-receive-status">
         <div v-if="messagesIndex.received===false && messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/not_receive-icon.png"
@@ -77,12 +63,12 @@
         </div>
       </td>
       <td class="message-send-status">
-        <div class="message-send-status" v-if="messagesIndex.sended===false && !messageOwner(messagesIndex.recipientId)" >
+        <div  v-if="messagesIndex.sended===false && !messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/mail-send-icon.png"
               width="25">
         </div>
-        <div class="message-send-status"  v-else-if="messagesIndex.sended===true && messageOwner(messagesIndex.recipientId)" >
+        <div   v-else-if="messagesIndex.sended===true && messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/mail-sended-icon.png"
               width="25">
@@ -92,11 +78,6 @@
       </td>
     </table>
   </div>
-
-<!--<div class="mt-4 text-center">-->
-<!--      <button v-on:click="showModal = true" class="mx-auto bg-primary rounded py-2 px-8 text-white">Open</button>-->
-<!--      <button class="save-btn" @click="showModal = false">close Modal</button>-->
-<!--    </div>-->
 </template>
 
 <script>
@@ -104,7 +85,6 @@
 import AuthService from "@/services/auth.service";
 import * as $state from "@/store/messages.module";
 import {contacts} from "@/store/contacts.module";
-// import {getMessages, messages} from "@/store/messages.module";
 import {messages} from "@/store/messages.module";
 
 export default {
@@ -113,15 +93,11 @@ export default {
   data() {
     return {
 
-      file:'',
-      previewImage:null,
-      emptyImg:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAHYcAAB2HAY/l8WUAAAAMSURBVBhXY/j//z8ABf4C/qc1gYQAAAAASUVORK5CYII=",
-      img:null,
+      clickCont:null,
+      img:"",
       showModal: false,
       disabled:null,
-      localStorageUserId:null,
       textMessage:"choose recipient first",
-      tmp:null,
       messageState:null,
       messages:[],
       emptyChat:'                                                            ',
@@ -129,8 +105,7 @@ export default {
       contacts: [],
       errors: [],
       pusherMessagesContacts: [],
-      tmppusherMessagesContacts: [],
-      messageObj:{
+        messageObj:{
         chatId:null,
         contactId:null,
       },
@@ -149,13 +124,13 @@ export default {
     $state.getMessages.state.recipientId=null
     $state.getMessages.state.chatId=null
     this.messageRecipient=null
-    this.localStorageUserId=localStorage.getItem('userId')
     this.getContacts()
     AuthService.tokenExpireCheck()
     try{
       this.contacts= this.$store.state.contacts.contacts
       const channel = this.$pusher.subscribe(localStorage.getItem('userId'));
       channel.bind('NewMessage', event => {
+
         this.pusherMessagesContacts.push(event)
       })
       console.log('subscribing to `my-channel`...', {
@@ -168,16 +143,34 @@ export default {
   },
   computed: {
 
+
        selectRecipient() {
 
 
-      return this.messageRecipient !== null ? true : false
+      return this.messageRecipient !== null
 
 
     },
 
   },
   methods: {
+    messageAlign(messageOwner){
+      if(this.messageRecipient===messageOwner){
+        return 'message-owner'
+      }
+      return 'message-send'
+    },
+    messageDate(timeN){
+      let d = new Date(timeN);
+      return d.toUTCString();
+    },
+    showImage(fileloc){
+      if(this.showModal && (fileloc!=='')){
+        return true
+      }
+      return false
+    },
+
     messageOwner(id){
 
       if (id.toString()===localStorage.getItem('userId')){
@@ -187,7 +180,6 @@ export default {
     },
 
     getContacts(event) {
-      console.log("getContacts")
       this.$store.dispatch("contacts/GetContacts", event).then(
           () =>
               this.contacts=contacts.state.contacts,
@@ -204,19 +196,20 @@ export default {
       );
     },
     clickedCont(messageObj){
-
+      if (this.clickCont===messageObj.contactId){
+         return
+      }
       this.messageRecipient=messageObj.contactId
 
       if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === messageObj.contactId))!==undefined) {
 
 
-        this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === messageObj.contactId)), 1)
+        this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === this.messageRecipient)), 1)
 
       }
 
         this.textMessage=null
       this.messageState=""
-      this.tmp=null
       if(messageObj.chatId===this.emptyChat){
         this.messageState="user don't accept chat request from "+messageObj.createdDate
         this.messages=""
@@ -240,8 +233,6 @@ export default {
               this.messages = $state.getMessages.state.getMessages
               $state.getMessages.state.recipientId=messageObj.contactId
               $state.getMessages.state.chatId=messageObj.chatId
-              // this.clickedChat = messageObj.chatId
-
                }catch (e) {
               console.log("clickedCont error",e)
               return false;
@@ -258,7 +249,6 @@ export default {
       );
     },
     hadNewMessages(){
-      console.log("hadNewMessages")
       this.$store.dispatch("hadNewMessages/HadNewMessages").then(
           () => {
           },
@@ -272,9 +262,6 @@ export default {
           }
       );
     },
-    handleFileUpload() {
-      this.file = this.$refs.file.files[0];
-    },
     sendImage() {
          try {
           this.sendImageObj.chatId = $state.getMessages.state.chatId,
@@ -285,9 +272,7 @@ export default {
         }
 
         this.$store.dispatch("sendImage/SendImage", this.sendImageObj).then(
-
-              // this.img = response
-              // console.log("response", response)
+            this.clickCont=null,
               setTimeout(() => {
                   this.clickedCont({chatId:this.sendImageObj.chatId,
                     contactId:this.sendImageObj.contactId});
@@ -305,10 +290,10 @@ export default {
 
 
     },
-    openImage(fileloc){
-      this.img=this.emptyImg
+    openImage(fileLoc){
+      this.img=""
       this.showModal =!this.showModal
-      this.$store.dispatch("openImage/OpenImage", fileloc).then(
+      this.$store.dispatch("openImage/OpenImage", fileLoc).then(
           response=>{
           this.img=response,
          (error) => {
@@ -324,8 +309,7 @@ export default {
     },
     sendingMessage()
     {
-      console.log("SendMessage",)
-     this.sendMessage.clickedChatId= $state.getMessages.state.chatId
+    this.sendMessage.clickedChatId= $state.getMessages.state.chatId
     this.sendMessage.messageRecipientId= $state.getMessages.state.recipientId
       this.sendMessage.text=this.textMessage
       this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
@@ -333,6 +317,7 @@ export default {
           this.messages = messages.state.getMessages,
 
           setTimeout(() => {
+            this.clickCont=null
             this.clickedCont({chatId:this.sendMessage.clickedChatId,
               contactId:this.sendMessage.messageRecipientId});
           }, 800),
@@ -351,16 +336,19 @@ export default {
 
     },
     checkAvailability(arr, val) {
-console.log("checkAvailability",arr, " -",val,arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal)))
       return arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal))
     },
     haveUnreadMessage(contactId){
        try{
+         if(this.pusherMessagesContacts.length===0){
+           return
+
+         }
          if(this.pusherMessagesContacts.length>0 && contactId!=null){
 
           if(contactId===this.messageRecipient){
 
-
+            this.clickCont=null,
             this.clickedCont({chatId:$state.getMessages.state.chatId,
               contactId:$state.getMessages.state.recipientId})
             return
@@ -380,17 +368,17 @@ console.log("checkAvailability",arr, " -",val,arr.some((arrVal) => JSON.stringif
 </script>
 
 <style scoped>
-.block-contacts{width:30%;height:85%;overflow:auto;float:left}
-.block-messages{width:70%;height:85%;overflow:auto}
+.block-contacts{width:25%;height:85%;overflow:auto;float:left}
+.block-messages{width:70%;height:85%;overflow:auto;}
 .block-message{width:100%;overflow:auto;float:left;border: solid;}
 .block-message-text{width:50%;overflow:auto;float:left;border:none}
 .block-message-image{width:40%;overflow:auto;float:left;border:none}
-.block-message-image-submit{width:10%;overflow:auto;float:left;border:none}
-.message-date{width:10%;}
-.message-owner{width:50%;  color: blueviolet; text-align: left}
-.message-recipient{width:50%;color: green; text-align: right}
-.message-receive-status{width:5%;}
-.message-send-status{width:5%;}
+.block-message-image-submit{width:10%;overflow:auto;float:left;}
+.message-date{min-width:15pc;}
+.message-owner{width:45%;  color: blueviolet; text-align: left;}
+.message-send{width:45%;color: green; text-align: right;}
+.message-receive-status{width:2%;}
+.message-send-status{width:2%;}
 
 
 .modal-overlay {

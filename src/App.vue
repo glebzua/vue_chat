@@ -2,7 +2,6 @@
   <div class="home-page">
 
     <nav class="navbar navbar-expand navbar-dark bg-dark">
-<!--      <div class="navbar-nav mr-auto" >-->
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0 mb-2">
             <li class="nav-item">
@@ -56,12 +55,8 @@
               </a>
             </li>
             </ul>
-
-
-
-
         </div>
-<!--      </div>-->
+
     </nav>
 
   </div>
