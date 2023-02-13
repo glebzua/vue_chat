@@ -11,24 +11,30 @@
         id="app"
         :key="index"
     >
-      <td class="block-request-img" >
-        <p>
-        <img
-            v-if="(!contacts.some(data => data.contactId === index.id))"
-            @click="clickUser(index.id,index.name)"
-            @mouseenter="mouseOverId(index.id)"
-            @mouseleave="mouseLeaveId"
-            src="../assets/request-send.png"
-            width="25"
-        >
-          </p>
-      </td>
-      <td class="block-users">{{index.name}}
+      <td class="block-users"
+
+          @mouseenter="mouseOverId(index.id,index.name)"
+
+      >{{index.name}}
 
 
       </td>
       <td class="block-users-status" v-if="inContacts(index.id)">{{ status }}</td>
-     <td class="block-users-request" v-if="hover===index.id">{{ requestState }}</td>
+
+     <td class="block-yourself" v-if="hover===index.id">{{ requestState }}</td>
+
+      <td class="block-transition"><transition   v-if="enableTransition(index.id)"
+                 >
+        <input class="block-transition-nickname"
+               maxlength="50"
+               v-model="textMessage" :placeholder=nickname
+              >
+      </transition>
+      <transition v-if="enableTransition(index.id)"
+      >
+        <button   class="block-transition-submit" @click="sendRequest()">{{ submitButton }}</button>
+      </transition>
+      </td>
     </tr>
   </div>
 
@@ -55,14 +61,14 @@ export default {
   },
   data() {
     return {
-
+      submitButton:"Submit",
+      textMessage:"",
       loading: false,
       users:[],
-      nickname:null,
+      nickname:"",
       errors:[],
-      clickedUser:null,
       hover: false,
-      requestState:'send chat request',
+      requestState:'',
       contacts:[],
       status:null,
       search:'',
@@ -101,6 +107,25 @@ export default {
     },
   },
   methods: {
+    enableTransition(id){
+      try{
+        if(id!==this.hover|id===parseInt(localStorage.getItem('userId'))){
+
+          return false
+        }
+        if(this.contacts.length!=0){
+        if(this.contacts.find(data => data.contactId ===id)){
+          return false
+        }
+      }
+
+      }catch
+          (error)
+      {
+        console.log("inContacts catch Error: ", error);
+      }
+      return true
+    },
 
 
     getContacts(event) {
@@ -121,11 +146,19 @@ console.log(" home page    (error) =>")
       );
     },
     inContacts(id){
-      try{if(this.contacts.length!=0){
-          if(this.contacts.find(data => data.contactId ===id)){
+
+      try{
+          if(this.contacts.length!=0){
+          if(this.contacts.find(data => data.contactId ===id)
+          ){
             this.status="this contact already in contacts list"
-            return this.status
+            return true
           }
+            // this.contacts.find((element) => {
+            //   if(element.contactId===id){
+            //   this.status="this contact already in contacts list by nickname "+element.nickname
+            //     return true
+            //   }})
         }
       }catch
           (error)
@@ -140,20 +173,18 @@ console.log(" home page    (error) =>")
 
 
     },
-    mouseOverId(userId){
+    mouseOverId(userId,userName){
+
        if(userId===parseInt(localStorage.getItem('userId'))){
-        this.requestState='this is You'
+       this.requestState='this is You'
        this.hover=userId
         return
       }
+      this.requestState=''
       this.hover=userId
-      this.requestState='send chat request'
+      this.nickname=userName
+      this.textMessage=userName
      },
-    mouseLeaveId(){
-      this.hover=false
-         this.requestState=''
-
-    },
 
     getUsers(event) {
 
@@ -172,17 +203,20 @@ console.log(" home page    (error) =>")
       );
     },
 
-    clickUser(userId,userName) {
+    sendRequest() {
       if(this.requestState==='this is You'){
         return
       }
       this.loading = true;
         this.$store.dispatch("messages/SendRequest", {
-          userId:userId
-          ,nickname:userName})
+          userId:this.hover
+          ,nickname:this.textMessage})
             .then(response=>{
-              this.requestState = response,
-                  // console.log("this.requestState =",this.requestState),
+              this.submitButton= response,
+                  setTimeout(() => {
+                    this.getContacts();
+                    this.submitButton="Submit"
+                  }, 600),
                   (error) => {
                     this.loading = false;
                     this.message =
@@ -198,11 +232,12 @@ console.log(" home page    (error) =>")
 </script>
 <style scoped>
 .block-home-page{width:100%;height:90%;overflow:auto;float:left}
-.block-request-img{width:5%;height:85%;overflow:auto;float:left}
-.block-users{width:35%;height:70%;overflow:auto;float:left}
+.block-users{width:35%;height:70%;overflow:auto;float:left;font-size:1em;}
 .block-users-status{width:35%;height:70%;overflow:auto;float:left}
-.block-users-request{width:40%;height:70%;overflow:auto;float:left;}
-.block-users-home-page{width:100%;height:10%;overflow:auto;float:left}
+.block-yourself{width:40%;height:70%;overflow:auto;float:left;}
+.block-transition{width:50%;float:left}
+.block-users-home-page{width:100%;height:15%;overflow:auto;float:left;font-size:1em;}
 
-
+.block-transition-nickname{width:40%;overflow:auto;font-size:0.8em;padding:0;border-width: 1px}
+.block-transition-submit{width:20%;overflow:auto;font-size:0.8em;padding:0;border-width: 1px;}
 </style>
