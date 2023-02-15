@@ -18,19 +18,17 @@
         :key="contIndex"
     >
       <td  class="clicked-Cont"
-          @click="clickedCont(contIndex),clickCont=contIndex.contactId">
+          @click="openContact(contIndex)">
         {{contIndex.nickname}}-
       </td>
-      <img v-if="haveUnreadMessage(contIndex.contactId)"
+      <img v-if=unreadMessage(contIndex.contactId)
            src="../assets/new_message.png"
-           width="25"
-      >
-    </tr>
+           width="25">
+      </tr>
 
   </div>
   <div class="block-messages">  <th>Messages</th>
-    <table > <td>{{messageState}}</td>
-    </table>
+
     <table v-for="(messagesIndex) of messages"
            :key="messagesIndex">
 
@@ -77,7 +75,15 @@
 
       </td>
     </table>
+
+    <transition  v-if="havePreviousMessages()">
+      <div class="load-previous-messages"
+           @click="loadPreviousMessages()">
+        tap to load previous messages
+      </div>
+    </transition>
   </div>
+
 </template>
 
 <script>
@@ -92,7 +98,7 @@ export default {
 
   data() {
     return {
-
+      messagesPageInChat:1,
       clickCont:null,
       img:"",
       showModal: false,
@@ -104,10 +110,12 @@ export default {
       messageRecipient:null,
       contacts: [],
       errors: [],
+
       pusherMessagesContacts: [],
-        messageObj:{
+      messageObj:{
         chatId:null,
         contactId:null,
+        messagesPageInChat:1,
       },
       sendMessage:{
         messageRecipientId:null,
@@ -116,13 +124,28 @@ export default {
       sendImageObj : {
         chatId: null,
         contactId: null,
-        formData:null
+        formData:null,
+
       },
     }
   },
   mounted() {
-    $state.getMessages.state.recipientId=null
-    $state.getMessages.state.chatId=null
+    try {
+      $state.getMessages.state.recipientId=null
+    }catch (e) {
+      console.log(" $state.getMessages.state.recipientId",e)
+    }
+    try {
+      $state.getMessages.state.chatId=null
+    }catch (e) {
+      console.log("$state.getMessages.state.chatId:",e)
+    }
+    try {
+      $state.getMessages.state.getMessages.total=null
+    }catch (e) {
+      console.log("$state.getMessages.state.getMessages.total:",e)
+    }
+
     this.messageRecipient=null
     this.getContacts()
     AuthService.tokenExpireCheck()
@@ -143,17 +166,28 @@ export default {
   },
   computed: {
 
-
        selectRecipient() {
-
-
       return this.messageRecipient !== null
-
-
     },
-
   },
   methods: {
+
+    havePreviousMessages() {
+      try{ if(this.messages.length===null ) {
+        return false
+      }
+        if($state.getMessages.state.getMessages.total===undefined ) {
+          return false
+        }
+        if(this.messages.length<$state.getMessages.state.getMessages.total) {
+          return true
+        }
+      }catch (e) {
+        console.log("havePreviousMessages error ",e)
+        return false
+      }
+      return false
+    },
     messageAlign(messageOwner){
       if(this.messageRecipient===messageOwner){
         return 'message-owner'
@@ -195,42 +229,77 @@ export default {
           }
       );
     },
-    clickedCont(messageObj){
-      if (this.clickCont===messageObj.contactId){
-         return
+    loadPreviousMessages(){
+      let loadPreviousMessagesObj={
+        chatId:null,
+        messagesPageInChat:null,
       }
-      this.messageRecipient=messageObj.contactId
+      this.messagesPageInChat+=1
 
-      if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === messageObj.contactId))!==undefined) {
+      loadPreviousMessagesObj.chatId=$state.getMessages.state.chatId
+      loadPreviousMessagesObj.messagesPageInChat=this.messagesPageInChat
 
-
-        this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === this.messageRecipient)), 1)
-
-      }
-
-        this.textMessage=null
-      this.messageState=""
-      if(messageObj.chatId===this.emptyChat){
-        this.messageState="user don't accept chat request from "+messageObj.createdDate
-        this.messages=""
-        this.messageRecipient=null
-        this.textMessage="cant send messages to this contact"
-
-        return
-      }
-      this.getMessages(messageObj)
-    },
-
-    getMessages(messageObj){
-
-      this.$store.dispatch("getMessages/GetMessages", messageObj.chatId).then(
+      this.$store.dispatch("getMessages/GetMessages", loadPreviousMessagesObj).then(
           () => {
             try {
               if($state.getMessages.state.getMessages===null){
                 $state.getMessages.state.recipientId=null
                 this.messageState="you have no massages with this user!"
               }
-              this.messages = $state.getMessages.state.getMessages
+               $state.getMessages.state.getMessages.Message.forEach(
+                  element =>this.messages.push(element)
+              );
+
+            }catch (e) {
+              console.log("clickedCont error",e)
+              return false;
+            }
+          },
+          (error) => {
+            this.message =
+                (error.response &&
+                    error.response.data &&
+                    error.response.data.message) ||
+                error.message ||
+                error.toString();
+          }
+      );
+
+    },
+openContact(messageObj){
+if(this.messageObj.chatId===messageObj.chatId){
+  return
+}
+  this.messageObj.chatId=messageObj.chatId
+  this.messageObj.contactId=messageObj.contactId
+  this.messageRecipient=messageObj.contactId
+  this.clickedCont(messageObj)
+
+},
+    clickedCont(messageObj){
+
+      this.messagesPageInChat=1
+      messageObj.messagesPageInChat=this.messagesPageInChat
+      this.textMessage=null
+      this.messageState=""
+      if(messageObj.chatId===this.emptyChat){
+        this.messageState="user don't accept chat request from "+messageObj.createdDate
+        this.textMessage="cant send messages to this contact"
+        this.clickCont=messageObj.contactId
+        return
+      }
+      this.getMessages(messageObj)
+    },
+
+    getMessages(messageObj){
+      this.$store.dispatch("getMessages/GetMessages", messageObj).then(
+          () => {
+            try {
+              if($state.getMessages.state.getMessages===null){
+                $state.getMessages.state.recipientId=null
+                this.messageState="you have no massages with this user!"
+              }
+              this.messages = messages.state.getMessages.Message,
               $state.getMessages.state.recipientId=messageObj.contactId
               $state.getMessages.state.chatId=messageObj.chatId
                }catch (e) {
@@ -253,7 +322,7 @@ export default {
           () => {
           },
           (error) => {
-            this.message =
+            // this.message =
                 (error.response &&
                     error.response.data &&
                     error.response.data.message) ||
@@ -313,17 +382,12 @@ export default {
     this.sendMessage.messageRecipientId= $state.getMessages.state.recipientId
       this.sendMessage.text=this.textMessage
       this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
-
-          this.messages = messages.state.getMessages,
-
           setTimeout(() => {
-            this.clickCont=null
+
             this.clickedCont({chatId:this.sendMessage.clickedChatId,
               contactId:this.sendMessage.messageRecipientId});
-          }, 800),
-
+          }, 200),
           this.textMessage=null,
-
           (error) => {
             this.message =
                 (error.response &&
@@ -338,31 +402,26 @@ export default {
     checkAvailability(arr, val) {
       return arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal))
     },
-    haveUnreadMessage(contactId){
-       try{
-         if(this.pusherMessagesContacts.length===0){
-           return
+    unreadMessage(contactId){
+      try{
+        if(this.pusherMessagesContacts.length===0){
+          return false
 
-         }
-         if(this.pusherMessagesContacts.length>0 && contactId!=null){
-
-          if(contactId===this.messageRecipient){
-
-            this.clickCont=null,
-            this.clickedCont({chatId:$state.getMessages.state.chatId,
-              contactId:$state.getMessages.state.recipientId})
-            return
-          }
         }
-
-      }catch (e) {
-        console.log("haveUnreadMessage error:", e)
+        if(contactId===this.messageRecipient) {
+          if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === contactId))!==undefined) {
+          this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === this.messageRecipient)), 1)
+              this.$store.dispatch("getMessages/GetMessages", this.messageObj).then(
+              () => {
+                this.messages = messages.state.getMessages.Message})
+           }
+      }}catch (e) {
+        console.log("unreadMessage e",e)
       }
-         return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
+    return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
 
     },
-
-  }
+   }
 }
 
 </script>
@@ -379,7 +438,7 @@ export default {
 .message-send{width:45%;color: green; text-align: right;}
 .message-receive-status{width:2%;}
 .message-send-status{width:2%;}
-
+.load-previous-messages{width:54%;overflow:auto;float:right;}
 
 .modal-overlay {
   position: fixed;
@@ -395,7 +454,7 @@ export default {
 }
 @keyframes fadeIn{
   0% { opacity:0; }
-  66% { opacity:0.3; }
+  66% { opacity:0.6; }
   100% { opacity:1; }
 }
 

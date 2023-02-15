@@ -5,9 +5,9 @@ import authHeader from './auth-header';
 
 class MessagesService {
 
-    GetMessages(chatId) {
+    GetMessages(messageObj){
             return axios
-            .get(API_URL + 'messages/chat?chatId='+chatId,{ headers: authHeader(),
+            .get(API_URL + 'messages/chat/page?page='+messageObj.messagesPageInChat+'&chatId='+messageObj.chatId,{ headers: authHeader(),
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',
                 withCredentials: true,
