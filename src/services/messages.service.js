@@ -30,12 +30,12 @@ class MessagesService {
 
             });
     }
-    SendMessage(sendMessage) {
+    SendMessage(messageObj) {
            return axios
                 .post(API_URL + 'messages',{
-                recipientId:sendMessage.messageRecipientId,
-                chatId:sendMessage.clickedChatId,
-                message:sendMessage.text,
+                recipientId:messageObj.contactId,
+                chatId:messageObj.chatId,
+                message:messageObj.text,
             },{headers: authHeader(),
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json',
@@ -84,9 +84,9 @@ class MessagesService {
                 return response.data;
             });
     }
-    SendImage(sendImageObj) {
+    SendImage(messageObj) {
         return axios
-            .post(API_URL + 'images?chatId='+sendImageObj.chatId+'&recipientId='+sendImageObj.contactId,sendImageObj.formData,
+            .post(API_URL + 'images?chatId='+messageObj.chatId+'&recipientId='+messageObj.contactId,messageObj.imageSelector,
             {headers: authHeader(),
                 'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'image/jpg',

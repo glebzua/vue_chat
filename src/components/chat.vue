@@ -1,16 +1,15 @@
 <template>
-  <div class="block-message"  >
-    <input class="block-message-text" :disabled="selectRecipient ? disabled : ''"
+
+    <fieldset class="block-message"  :disabled="selectRecipient ? disabled : ''">
+    <input class="block-message-text"
            v-model="textMessage" placeholder="text message here, tap Enter to send"
            @keyup.enter = "sendingMessage()">
-    <input class="block-message-image" :disabled="selectRecipient ? disabled : ''"
+    <input class="block-message-image"
            type="file" id="file" ref="file" accept="image/jpeg"
            placeholder="drop image here, tap Enter to send"/>
-    <button class="block-message-image-submit" v-on:click="sendImage()">Submit</button>
-  </div>
-
-
-  <div class="block-contacts" >
+    <button class="block-message-image-submit"  v-on:click="sendImage()">Submit</button>
+    </fieldset>
+    <div class="block-contacts" >
     <th>Contact</th>
     <tr
         v-for="(contIndex) of contacts"
@@ -98,7 +97,6 @@ export default {
 
   data() {
     return {
-      messagesPageInChat:1,
       clickCont:null,
       img:"",
       showModal: false,
@@ -110,22 +108,13 @@ export default {
       messageRecipient:null,
       contacts: [],
       errors: [],
-
       pusherMessagesContacts: [],
       messageObj:{
         chatId:null,
         contactId:null,
         messagesPageInChat:1,
-      },
-      sendMessage:{
-        messageRecipientId:null,
-        clickedChatId:null,
-        text:null},
-      sendImageObj : {
-        chatId: null,
-        contactId: null,
-        formData:null,
-
+        text:null,
+        imageSelector:null,
       },
     }
   },
@@ -230,16 +219,8 @@ export default {
       );
     },
     loadPreviousMessages(){
-      let loadPreviousMessagesObj={
-        chatId:null,
-        messagesPageInChat:null,
-      }
-      this.messagesPageInChat+=1
-
-      loadPreviousMessagesObj.chatId=$state.getMessages.state.chatId
-      loadPreviousMessagesObj.messagesPageInChat=this.messagesPageInChat
-
-      this.$store.dispatch("getMessages/GetMessages", loadPreviousMessagesObj).then(
+      this.messageObj.messagesPageInChat+=1
+      this.$store.dispatch("getMessages/GetMessages", this.messageObj).then(
           () => {
             try {
               if($state.getMessages.state.getMessages===null){
@@ -273,26 +254,29 @@ if(this.messageObj.chatId===messageObj.chatId){
   this.messageObj.chatId=messageObj.chatId
   this.messageObj.contactId=messageObj.contactId
   this.messageRecipient=messageObj.contactId
-  this.clickedCont(messageObj)
+  this.messageObj.messagesPageInChat=1
+  this.messageObj.createdDate=messageObj.createdDate
+  this.clickedCont()
 
 },
-    clickedCont(messageObj){
-
-      this.messagesPageInChat=1
-      messageObj.messagesPageInChat=this.messagesPageInChat
+    clickedCont(){
       this.textMessage=null
       this.messageState=""
-      if(messageObj.chatId===this.emptyChat){
-        this.messageState="user don't accept chat request from "+messageObj.createdDate
+      if(this.messageObj.chatId===this.emptyChat){
+        this.messageState="user don't accept chat request from "+this.messageObj.createdDate
         this.textMessage="cant send messages to this contact"
-        this.clickCont=messageObj.contactId
+        this.clickCont=this.messageObj.contactId
         return
       }
-      this.getMessages(messageObj)
+      this.getMessages()
     },
 
-    getMessages(messageObj){
-      this.$store.dispatch("getMessages/GetMessages", messageObj).then(
+    getMessage(){
+
+      return  this.$store.dispatch("getMessages/GetMessages", this.messageObj)
+    },
+    getMessages(){
+      this.getMessage().then(
           () => {
             try {
               if($state.getMessages.state.getMessages===null){
@@ -300,8 +284,8 @@ if(this.messageObj.chatId===messageObj.chatId){
                 this.messageState="you have no massages with this user!"
               }
               this.messages = messages.state.getMessages.Message,
-              $state.getMessages.state.recipientId=messageObj.contactId
-              $state.getMessages.state.chatId=messageObj.chatId
+              $state.getMessages.state.recipientId=this.messageObj.contactId
+              $state.getMessages.state.chatId=this.messageObj.chatId
                }catch (e) {
               console.log("clickedCont error",e)
               return false;
@@ -322,7 +306,6 @@ if(this.messageObj.chatId===messageObj.chatId){
           () => {
           },
           (error) => {
-            // this.message =
                 (error.response &&
                     error.response.data &&
                     error.response.data.message) ||
@@ -333,19 +316,16 @@ if(this.messageObj.chatId===messageObj.chatId){
     },
     sendImage() {
          try {
-          this.sendImageObj.chatId = $state.getMessages.state.chatId,
-          this.sendImageObj.contactId = $state.getMessages.state.recipientId
-          this.sendImageObj.formData=document.querySelector('#file').files[0]
+          this.messageObj.imageSelector=document.querySelector('#file').files[0]
         } catch (e) {
-          console.log(e, this.sendImageObj)
+          console.log(e, this.messageObj)
         }
 
-        this.$store.dispatch("sendImage/SendImage", this.sendImageObj).then(
+        this.$store.dispatch("sendImage/SendImage", this.messageObj).then(
             this.clickCont=null,
               setTimeout(() => {
-                  this.clickedCont({chatId:this.sendImageObj.chatId,
-                    contactId:this.sendImageObj.contactId});
-            }, 600),
+                  this.clickedCont(this.messageObj);
+            }, 400),
                   (error) => {
                     this.message =
                         (error.response &&
@@ -354,10 +334,7 @@ if(this.messageObj.chatId===messageObj.chatId){
                         error.message ||
                         error.toString();
                   }
-
         );
-
-
     },
     openImage(fileLoc){
       this.img=""
@@ -374,21 +351,15 @@ if(this.messageObj.chatId===messageObj.chatId){
                 error.toString();
           }}
       );
-
     },
     sendingMessage()
     {
-    this.sendMessage.clickedChatId= $state.getMessages.state.chatId
-    this.sendMessage.messageRecipientId= $state.getMessages.state.recipientId
-      this.sendMessage.text=this.textMessage
-      this.$store.dispatch("messages/SendMessage", this.sendMessage).then(
+       this.messageObj.text=this.textMessage
+      this.$store.dispatch("messages/SendMessage", this.messageObj).then(
           setTimeout(() => {
-
-            this.clickedCont({chatId:this.sendMessage.clickedChatId,
-              contactId:this.sendMessage.messageRecipientId});
+            this.clickedCont();
           }, 200),
-          this.textMessage=null,
-          (error) => {
+         (error) => {
             this.message =
                 (error.response &&
                     error.response.data &&
@@ -397,7 +368,6 @@ if(this.messageObj.chatId===messageObj.chatId){
                 error.toString();
           }
       );
-
     },
     checkAvailability(arr, val) {
       return arr.some((arrVal) => JSON.stringify(val) === JSON.stringify(arrVal))
@@ -406,12 +376,11 @@ if(this.messageObj.chatId===messageObj.chatId){
       try{
         if(this.pusherMessagesContacts.length===0){
           return false
-
         }
         if(contactId===this.messageRecipient) {
           if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === contactId))!==undefined) {
           this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === this.messageRecipient)), 1)
-              this.$store.dispatch("getMessages/GetMessages", this.messageObj).then(
+            this.getMessage(this.messageObj).then(
               () => {
                 this.messages = messages.state.getMessages.Message})
            }
@@ -454,7 +423,8 @@ if(this.messageObj.chatId===messageObj.chatId){
 }
 @keyframes fadeIn{
   0% { opacity:0; }
-  66% { opacity:0.6; }
+  33% { opacity:0.1; }
+  70% { opacity:0.2; }
   100% { opacity:1; }
 }
 
