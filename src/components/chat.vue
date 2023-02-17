@@ -1,33 +1,35 @@
 <template>
 
-    <fieldset class="block-message"  :disabled="selectRecipient ? disabled : ''">
+  <fieldset class="block-message"  :disabled="selectRecipient ? disabled : ''">
     <input class="block-message-text"
            v-model="textMessage" placeholder="text message here, tap Enter to send"
            @keyup.enter = "sendingMessage()">
     <input class="block-message-image"
-           type="file" id="file" ref="file" accept="image/jpeg"
-           placeholder="drop image here, tap Enter to send"/>
-    <button class="block-message-image-submit"  v-on:click="sendImage()">Submit</button>
-    </fieldset>
-    <div class="block-contacts" >
+           value=""
+           type="file" id="file" accept="image/jpeg"
+           @change="imageSelector"
+           />
+    <button class="block-message-image-submit"  id="imageSubmit" disabled  v-on:click="sendImage()">Submit</button>
+  </fieldset>
+  <div class="block-contacts" >
     <th>Contact</th>
     <tr
         v-for="(contIndex) of contacts"
         id="app"
         :key="contIndex"
     >
-      <td  class="clicked-Cont"
-          @click="openContact(contIndex)">
+      <td  class="open-Cont"
+           @click="openContact(contIndex)">
         {{contIndex.nickname}}-
       </td>
       <img v-if=unreadMessage(contIndex.contactId)
            src="../assets/new_message.png"
            width="25">
-      </tr>
+    </tr>
 
   </div>
   <div class="block-messages">  <th>Messages</th>
-
+    <table > <td>{{messageState}}</td> </table >
     <table v-for="(messagesIndex) of messages"
            :key="messagesIndex">
 
@@ -35,19 +37,19 @@
 
       <td :class=messageAlign(messagesIndex.senderId) >
 
-          <img  v-if="messagesIndex.fileloc!==''"
-               @click="openImage(messagesIndex.fileloc)"
+        <img  v-if="messagesIndex.fileloc!==''"
+              @click="openImage(messagesIndex.fileloc)"
               src="../assets/logo.png"
               width="25">
 
-          <transition class=" modal-overlay" @click="showModal = !showModal"
-                      v-if="showImage(messagesIndex.fileloc)" >
+        <transition class=" modal-overlay" @click="showModal = !showModal"
+                    v-if="showImage(messagesIndex.fileloc)" >
           <img
-               :src="img"
+              :src="img"
           >
         </transition>
         {{messagesIndex.message}}</td>
-        <td class="message-receive-status">
+      <td class="message-receive-status">
         <div v-if="messagesIndex.received===false && messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/not_receive-icon.png"
@@ -97,7 +99,7 @@ export default {
 
   data() {
     return {
-      clickCont:null,
+
       img:"",
       showModal: false,
       disabled:null,
@@ -154,18 +156,32 @@ export default {
     this.hadNewMessages()
   },
   computed: {
-
-       selectRecipient() {
+    selectRecipient() {
       return this.messageRecipient !== null
     },
+
   },
   methods: {
+    imageSelector() {
+      try {
+        if ( document.getElementById("file").value === ""){
+          document.getElementById('imageSubmit').disabled = true;
+        }
+
+        // if (document.querySelector('#file').files[0] === undefined) {
+        //   document.getElementById('imageSubmit').disabled = true;
+        // }
+        else {
+          document.getElementById('imageSubmit').disabled = false;
+        }
+      }catch (e) {
+        console.log("imageSelector",e)
+        return   true
+      }},
 
     havePreviousMessages() {
-      try{ if(this.messages.length===null ) {
-        return false
-      }
-        if($state.getMessages.state.getMessages.total===undefined ) {
+      try{
+        if(this.messages===null ) {
           return false
         }
         if(this.messages.length<$state.getMessages.state.getMessages.total) {
@@ -227,10 +243,9 @@ export default {
                 $state.getMessages.state.recipientId=null
                 this.messageState="you have no massages with this user!"
               }
-               $state.getMessages.state.getMessages.Message.forEach(
+              $state.getMessages.state.getMessages.Message.forEach(
                   element =>this.messages.push(element)
               );
-
             }catch (e) {
               console.log("clickedCont error",e)
               return false;
@@ -247,27 +262,29 @@ export default {
       );
 
     },
-openContact(messageObj){
-if(this.messageObj.chatId===messageObj.chatId){
-  return
-}
-  this.messageObj.chatId=messageObj.chatId
-  this.messageObj.contactId=messageObj.contactId
-  this.messageRecipient=messageObj.contactId
-  this.messageObj.messagesPageInChat=1
-  this.messageObj.createdDate=messageObj.createdDate
-  this.clickedCont()
-
-},
-    clickedCont(){
-      this.textMessage=null
-      this.messageState=""
-      if(this.messageObj.chatId===this.emptyChat){
-        this.messageState="user don't accept chat request from "+this.messageObj.createdDate
-        this.textMessage="cant send messages to this contact"
-        this.clickCont=this.messageObj.contactId
+    openContact(messageObj){
+      if(this.messageObj.chatId===messageObj.chatId){
         return
       }
+      this.messageObj.chatId=messageObj.chatId
+      this.messageObj.contactId=messageObj.contactId
+      this.messageRecipient=messageObj.contactId
+      this.messageObj.messagesPageInChat=1
+      this.messageObj.createdDate=messageObj.createdDate
+      this.clickedCont()
+
+    },
+    clickedCont(){
+
+      if(this.messageObj.chatId===this.emptyChat){
+        this.messageState="user don't accept chat request from "+this.messageDate(this.messageObj.createdDate)
+        this.textMessage="cant send messages to this contact"
+        this.messageRecipient=null
+        return
+      }
+      this.textMessage=null
+      this.messageState=""
+
       this.getMessages()
     },
 
@@ -279,14 +296,15 @@ if(this.messageObj.chatId===messageObj.chatId){
       this.getMessage().then(
           () => {
             try {
-              if($state.getMessages.state.getMessages===null){
+
+              if($state.getMessages.state.getMessages.Message===null){
                 $state.getMessages.state.recipientId=null
                 this.messageState="you have no massages with this user!"
               }
               this.messages = messages.state.getMessages.Message,
-              $state.getMessages.state.recipientId=this.messageObj.contactId
+                  $state.getMessages.state.recipientId=this.messageObj.contactId
               $state.getMessages.state.chatId=this.messageObj.chatId
-               }catch (e) {
+            }catch (e) {
               console.log("clickedCont error",e)
               return false;
             }
@@ -306,6 +324,25 @@ if(this.messageObj.chatId===messageObj.chatId){
           () => {
           },
           (error) => {
+            (error.response &&
+                error.response.data &&
+                error.response.data.message) ||
+            error.message ||
+            error.toString();
+          }
+      );
+    },
+    sendImage() {
+        this.messageObj.imageSelector=document.querySelector('#file').files[0]
+      this.$store.dispatch("sendImage/SendImage", this.messageObj).then(
+          document.getElementById("file").value = "",
+          document.getElementById('imageSubmit').disabled = true,
+
+          setTimeout(() => {
+            this.clickedCont(this.messageObj);
+          }, 400),
+          (error) => {
+            this.message =
                 (error.response &&
                     error.response.data &&
                     error.response.data.message) ||
@@ -314,52 +351,31 @@ if(this.messageObj.chatId===messageObj.chatId){
           }
       );
     },
-    sendImage() {
-         try {
-          this.messageObj.imageSelector=document.querySelector('#file').files[0]
-        } catch (e) {
-          console.log(e, this.messageObj)
-        }
-
-        this.$store.dispatch("sendImage/SendImage", this.messageObj).then(
-            this.clickCont=null,
-              setTimeout(() => {
-                  this.clickedCont(this.messageObj);
-            }, 400),
-                  (error) => {
-                    this.message =
-                        (error.response &&
-                            error.response.data &&
-                            error.response.data.message) ||
-                        error.message ||
-                        error.toString();
-                  }
-        );
-    },
     openImage(fileLoc){
       this.img=""
       this.showModal =!this.showModal
       this.$store.dispatch("openImage/OpenImage", fileLoc).then(
           response=>{
-          this.img=response,
-         (error) => {
-            this.message =
-                (error.response &&
-                    error.response.data &&
-                    error.response.data.message) ||
-                error.message ||
-                error.toString();
-          }}
+            this.img=response,
+                (error) => {
+                  this.message =
+                      (error.response &&
+                          error.response.data &&
+                          error.response.data.message) ||
+                      error.message ||
+                      error.toString();
+                }}
       );
     },
     sendingMessage()
     {
-       this.messageObj.text=this.textMessage
+      if(this.textMessage===null){return}
+      this.messageObj.text=this.textMessage
       this.$store.dispatch("messages/SendMessage", this.messageObj).then(
           setTimeout(() => {
             this.clickedCont();
           }, 200),
-         (error) => {
+          (error) => {
             this.message =
                 (error.response &&
                     error.response.data &&
@@ -379,25 +395,25 @@ if(this.messageObj.chatId===messageObj.chatId){
         }
         if(contactId===this.messageRecipient) {
           if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === contactId))!==undefined) {
-          this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === this.messageRecipient)), 1)
+            this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === this.messageRecipient)), 1)
             this.getMessage(this.messageObj).then(
-              () => {
-                this.messages = messages.state.getMessages.Message})
-           }
-      }}catch (e) {
+                () => {
+                  this.messages = messages.state.getMessages.Message})
+          }
+        }}catch (e) {
         console.log("unreadMessage e",e)
       }
-    return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
+      return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
 
     },
-   }
+  }
 }
 
 </script>
 
 <style scoped>
-.block-contacts{width:25%;height:85%;overflow:auto;float:left}
-.block-messages{width:70%;height:85%;overflow:auto;}
+.block-contacts{width:25%;;overflow:auto;float:left}
+.block-messages{width:70%;;overflow:auto;}
 .block-message{width:100%;overflow:auto;float:left;border: solid;}
 .block-message-text{width:50%;overflow:auto;float:left;border:none}
 .block-message-image{width:40%;overflow:auto;float:left;border:none}

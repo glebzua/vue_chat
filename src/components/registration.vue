@@ -73,7 +73,7 @@ export default {
         .max(40, "Must be maximum 40 characters!"),
       phoneNumber:yup
           .string()
-          .required("PhoneNumber is required!")
+          // .required("PhoneNumber is required!")
           .min(12, "Must be at least 6 characters!")
           .max(14, "Must be maximum 40 characters!"),
           });

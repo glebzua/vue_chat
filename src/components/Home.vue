@@ -231,10 +231,10 @@ console.log(" home page    (error) =>")
   }}
 </script>
 <style scoped>
-.block-home-page{width:100%;height:90%;overflow:auto;float:left}
-.block-users{width:35%;height:70%;overflow:auto;float:left;font-size:1em;}
-.block-users-status{width:35%;height:70%;overflow:auto;float:left}
-.block-yourself{width:40%;height:70%;overflow:auto;float:left;}
+.block-home-page{width:100%;overflow:auto;float:left}
+.block-users{width:35%;overflow:auto;float:left;font-size:1em;}
+.block-users-status{width:35%;overflow:auto;float:left}
+.block-yourself{width:40%;overflow:auto;float:left;}
 .block-transition{width:50%;float:left}
 .block-users-home-page{width:100%;height:15%;overflow:auto;float:left;font-size:1em;}
 
