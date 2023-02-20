@@ -4,6 +4,7 @@
       <img
         id="profile-img"
         src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
+        alt="profile avatar"
         class="profile-img-card"
       />
       <Form @submit="handleRegister" :validation-schema="schema">
@@ -129,14 +130,13 @@ label {
 .card {
   background-color: #f7f7f7;
   padding: 20px 25px 30px;
-  margin: 0 auto 25px;
-  margin-top: 50px;
+  margin: 50px auto 25px;
   -moz-border-radius: 2px;
   -webkit-border-radius: 2px;
   border-radius: 2px;
-  -moz-box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
-  -webkit-box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
-  box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+  -webkit-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
 }
 
 .profile-img-card {

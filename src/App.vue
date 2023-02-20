@@ -84,7 +84,7 @@ export default {
       return this.$store.state.auth.user
       }
 } catch (e) {
-        localStorage.setItem('$store.logddgedIn', false);
+        localStorage.setItem('$store.loggedIn', false);
       }
       return this.$store.state.auth.user
     },

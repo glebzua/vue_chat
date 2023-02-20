@@ -62,7 +62,7 @@ class MessagesService {
 
             .then(r => {
                 if (r.status === 201) {
-                    return "request sended";
+                    return "request sent";
                 }
                 if (r.response.status === 400) {
                    return r.response.data;

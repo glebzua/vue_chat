@@ -8,7 +8,7 @@
            value=""
            type="file" id="file" accept="image/jpeg"
            @change="imageSelector"
-           />
+    />
     <button class="block-message-image-submit"  id="imageSubmit" disabled  v-on:click="sendImage()">Submit</button>
   </fieldset>
   <div class="block-contacts" >
@@ -24,6 +24,7 @@
       </td>
       <img v-if=unreadMessage(contIndex.contactId)
            src="../assets/new_message.png"
+           alt="have new message"
            width="25">
     </tr>
 
@@ -40,12 +41,14 @@
         <img  v-if="messagesIndex.fileloc!==''"
               @click="openImage(messagesIndex.fileloc)"
               src="../assets/logo.png"
+              alt="have image message"
               width="25">
 
         <transition class=" modal-overlay" @click="showModal = !showModal"
                     v-if="showImage(messagesIndex.fileloc)" >
           <img
               :src="img"
+              alt="have image message"
           >
         </transition>
         {{messagesIndex.message}}</td>
@@ -53,23 +56,28 @@
         <div v-if="messagesIndex.received===false && messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/not_receive-icon.png"
+              alt="sent message dont read"
               width="25">
         </div>
         <div v-else-if="messagesIndex.received===true && messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/receive-icon.png"
+              alt="sent message read"
               width="25">
         </div>
       </td>
       <td class="message-send-status">
-        <div  v-if="messagesIndex.sended===false && !messageOwner(messagesIndex.recipientId)" >
+        <div  v-if="messagesIndex.send===false && !messageOwner(messagesIndex.recipientId)" >
           <img
               src="../assets/mail-send-icon.png"
+              alt="message sent"
               width="25">
+
         </div>
-        <div   v-else-if="messagesIndex.sended===true && messageOwner(messagesIndex.recipientId)" >
+        <div   v-else-if="messagesIndex.send===true && messageOwner(messagesIndex.recipientId)" >
           <img
-              src="../assets/mail-sended-icon.png"
+              src="../assets/mail-sent-icon.png"
+              alt="message delivered"
               width="25">
 
         </div>
@@ -88,18 +96,14 @@
 </template>
 
 <script>
-
 import AuthService from "@/services/auth.service";
 import * as $state from "@/store/messages.module";
 import {contacts} from "@/store/contacts.module";
 import {messages} from "@/store/messages.module";
-
 export default {
   name: "Contacts-page",
-
   data() {
     return {
-
       img:"",
       showModal: false,
       disabled:null,
@@ -136,7 +140,6 @@ export default {
     }catch (e) {
       console.log("$state.getMessages.state.getMessages.total:",e)
     }
-
     this.messageRecipient=null
     this.getContacts()
     AuthService.tokenExpireCheck()
@@ -144,7 +147,6 @@ export default {
       this.contacts= this.$store.state.contacts.contacts
       const channel = this.$pusher.subscribe(localStorage.getItem('userId'));
       channel.bind('NewMessage', event => {
-
         this.pusherMessagesContacts.push(event)
       })
       console.log('subscribing to `my-channel`...', {
@@ -159,26 +161,15 @@ export default {
     selectRecipient() {
       return this.messageRecipient !== null
     },
-
   },
   methods: {
     imageSelector() {
       try {
-        if ( document.getElementById("file").value === ""){
-          document.getElementById('imageSubmit').disabled = true;
-        }
-
-        // if (document.querySelector('#file').files[0] === undefined) {
-        //   document.getElementById('imageSubmit').disabled = true;
-        // }
-        else {
-          document.getElementById('imageSubmit').disabled = false;
-        }
+        document.getElementById('imageSubmit').disabled = document.getElementById("file").value === "";
       }catch (e) {
         console.log("imageSelector",e)
         return   true
       }},
-
     havePreviousMessages() {
       try{
         if(this.messages===null ) {
@@ -204,20 +195,13 @@ export default {
       return d.toUTCString();
     },
     showImage(fileloc){
-      if(this.showModal && (fileloc!=='')){
-        return true
-      }
-      return false
-    },
+      return this.showModal && (fileloc !== '');
 
+    },
     messageOwner(id){
+      return id.toString() !== localStorage.getItem('userId');
 
-      if (id.toString()===localStorage.getItem('userId')){
-        return false
-      }
-      return true
     },
-
     getContacts(event) {
       this.$store.dispatch("contacts/GetContacts", event).then(
           () =>
@@ -260,7 +244,6 @@ export default {
                 error.toString();
           }
       );
-
     },
     openContact(messageObj){
       if(this.messageObj.chatId===messageObj.chatId){
@@ -272,10 +255,8 @@ export default {
       this.messageObj.messagesPageInChat=1
       this.messageObj.createdDate=messageObj.createdDate
       this.clickedCont()
-
     },
     clickedCont(){
-
       if(this.messageObj.chatId===this.emptyChat){
         this.messageState="user don't accept chat request from "+this.messageDate(this.messageObj.createdDate)
         this.textMessage="cant send messages to this contact"
@@ -284,24 +265,20 @@ export default {
       }
       this.textMessage=null
       this.messageState=""
-
+      document.getElementById("file").value = ""
+      document.getElementById('imageSubmit').disabled = true
       this.getMessages()
     },
 
-    getMessage(){
-
-      return  this.$store.dispatch("getMessages/GetMessages", this.messageObj)
-    },
     getMessages(){
-      this.getMessage().then(
+      this.refreshMessagesList().then(
           () => {
             try {
-
               if($state.getMessages.state.getMessages.Message===null){
                 $state.getMessages.state.recipientId=null
                 this.messageState="you have no massages with this user!"
               }
-              this.messages = messages.state.getMessages.Message,
+              this.messages = messages.state.getMessages.Message
                   $state.getMessages.state.recipientId=this.messageObj.contactId
               $state.getMessages.state.chatId=this.messageObj.chatId
             }catch (e) {
@@ -319,6 +296,9 @@ export default {
           }
       );
     },
+    refreshMessagesList(){
+      return  this.$store.dispatch("getMessages/GetMessages", this.messageObj)
+    },
     hadNewMessages(){
       this.$store.dispatch("hadNewMessages/HadNewMessages").then(
           () => {
@@ -333,14 +313,15 @@ export default {
       );
     },
     sendImage() {
-        this.messageObj.imageSelector=document.querySelector('#file').files[0]
+      this.messageObj.imageSelector=document.querySelector('#file').files[0]
       this.$store.dispatch("sendImage/SendImage", this.messageObj).then(
           document.getElementById("file").value = "",
           document.getElementById('imageSubmit').disabled = true,
-
           setTimeout(() => {
-            this.clickedCont(this.messageObj);
+                this.refreshMessagesList().then(
+                    () => {this.messages = messages.state.getMessages.Message});
           }, 400),
+
           (error) => {
             this.message =
                 (error.response &&
@@ -396,7 +377,7 @@ export default {
         if(contactId===this.messageRecipient) {
           if((this.pusherMessagesContacts.find(item => item.NewMessageFrom === contactId))!==undefined) {
             this.pusherMessagesContacts.splice(this.pusherMessagesContacts.indexOf(this.pusherMessagesContacts.find(item => item.NewMessageFrom === this.messageRecipient)), 1)
-            this.getMessage(this.messageObj).then(
+            this.refreshMessagesList(this.messageObj).then(
                 () => {
                   this.messages = messages.state.getMessages.Message})
           }
@@ -404,11 +385,9 @@ export default {
         console.log("unreadMessage e",e)
       }
       return  this.checkAvailability(this.pusherMessagesContacts, {NewMessageFrom:contactId})
-
     },
   }
 }
-
 </script>
 
 <style scoped>
@@ -424,7 +403,6 @@ export default {
 .message-receive-status{width:2%;}
 .message-send-status{width:2%;}
 .load-previous-messages{width:54%;overflow:auto;float:right;}
-
 .modal-overlay {
   position: fixed;
   top: 10%;
@@ -435,7 +413,6 @@ export default {
   justify-content: flex-end;
   background-color: #fff;
   animation: 1s fadeIn;
-
 }
 @keyframes fadeIn{
   0% { opacity:0; }
@@ -443,7 +420,4 @@ export default {
   70% { opacity:0.2; }
   100% { opacity:1; }
 }
-
-
 </style>
-

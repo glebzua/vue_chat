@@ -109,11 +109,11 @@ export default {
   methods: {
     enableTransition(id){
       try{
-        if(id!==this.hover|id===parseInt(localStorage.getItem('userId'))){
+        if(id!==this.hover||id===parseInt(localStorage.getItem('userId'))){
 
           return false
         }
-        if(this.contacts.length!=0){
+        if(this.contacts.length!==0){
         if(this.contacts.find(data => data.contactId ===id)){
           return false
         }
@@ -148,7 +148,7 @@ console.log(" home page    (error) =>")
     inContacts(id){
 
       try{
-          if(this.contacts.length!=0){
+          if(this.contacts.length!==0){
           if(this.contacts.find(data => data.contactId ===id)
           ){
             this.status="this contact already in contacts list"
